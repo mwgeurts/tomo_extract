@@ -1,8 +1,8 @@
 function referenceImage = LoadImage(path, name, planUID)
-% LoadReferenceImage loads the reference CT and associated IVDT
-% information from a specified TomoTherapy patient archive and plan UID.
-% This function has currently been validated for version 4.X and 5.X 
-% patient archives.  This function calls FindIVDT to load the IVDT data.
+% LoadImage loads the reference CT and associated IVDT information from a 
+% specified TomoTherapy patient archive and plan UID. This function has 
+% currently been validated for version 4.X and 5.X patient archives.  This 
+% function calls FindIVDT to load the IVDT data.
 %
 % The following variables are required for proper execution: 
 %   path: path to the patient archive XML file

@@ -1,6 +1,6 @@
 function structures = LoadStructures(varargin)
-% LoadReferenceStructures loads transverse reference structure sets given
-% a reference image UID and creates mask arrays for each structure.  Voxels
+% LoadStructures loads transverse reference structure sets given a 
+% reference image UID and creates mask arrays for each structure.  Voxels
 % will be 1 if they are included in the structure and 0 if not.  Currently
 % partial voxel inclusion is not supported. This function has currently 
 % been validated for version 4.X and 5.X patient archives.
