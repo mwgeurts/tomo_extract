@@ -12,6 +12,12 @@ function scans = FindMVCTScanLengths(path, name)
 %       containing the following fields: planUID, planName, scanUIDs, and
 %       scanLengths
 %
+% Below is an example of how this function is used:
+%
+%   path = '/path/to/archive/';
+%   name = 'Anon_0001_patient.xml';
+%   scans = FindMVCTScanLengths(path, name);
+%
 % Copyright (C) 2015 University of Wisconsin Board of Regents
 %
 % This program is free software: you can redistribute it and/or modify it 
@@ -31,14 +37,18 @@ function scans = FindMVCTScanLengths(path, name)
 try  
    
 % Log start of matching and start timer
-Event(sprintf('Searching %s for approved plans', name));
-tic;
+if exist('Event', 'file') == 2
+    Event(sprintf('Searching %s for approved plans', name));
+    tic;
+end
 
 % The patient XML is parsed using xpath class
 import javax.xml.xpath.*
 
 % Read in the patient XML and store the Document Object Model node
-Event('Loading file contents data using xmlread');
+if exist('Event', 'file') == 2
+    Event('Loading file contents data using xmlread');
+end
 doc = xmlread(fullfile(path, name));
 
 % Initialize a new xpath instance to the variable factory
@@ -145,10 +155,14 @@ end
 scans = scans(~cellfun('isempty', scans));
 
 % Log number of delivery plans found
-Event(sprintf('%i plan(s) found', length(scans)));
+if exist('Event', 'file') == 2
+    Event(sprintf('%i plan(s) found', length(scans)));
+end
 
 % Log start of matching and start timer
-Event(sprintf('Searching %s for MVCT procedures', name));
+if exist('Event', 'file') == 2
+    Event(sprintf('Searching %s for MVCT procedures', name));
+end
 
 % Declare a new xpath search expression for all fullProcedureDataArrays
 expression = xpath.compile(['//fullProcedureDataArray/', ...
@@ -291,11 +305,20 @@ for i = 1:nodeList.getLength
         str2double(subnodeList.item(stopIndex).getFirstChild.getNodeValue);
 end
 
+% Log completion of search
+if exist('Event', 'file') == 2
+    Event(sprintf('MVCT scans parsed successfully in %0.3f seconds', toc));
+end
+
 % Clear temporary variables
 clear doc factory xpath i node subnode nodeList subnodeList expression ...
     subexpression j parent plan prev startIndex stopIndex;
 
 % Catch errors, log, and rethrow
 catch err  
-    Event(getReport(err, 'extended', 'hyperlinks', 'off'), 'ERROR');
+    if exist('Event', 'file') == 2
+        Event(getReport(err, 'extended', 'hyperlinks', 'off'), 'ERROR');
+    else
+        rethrow(err);
+    end
 end

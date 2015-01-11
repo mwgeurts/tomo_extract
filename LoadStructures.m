@@ -19,8 +19,17 @@ function structures = LoadStructures(varargin)
 %   structures: cell array of structure names, color, and 3D mask array of
 %       same size as reference image containing fraction of voxel inclusion
 %       in structure
-%       
-% Copyright (C) 2014 University of Wisconsin Board of Regents
+%     
+% Below is an example of how this function is used:
+%
+%   path = '/path/to/archive/';
+%   name = 'Anon_0001_patient.xml';
+%   planUID = '1.2.826.0.1.3680043.2.200.1688035198.217.40463.657';
+%   image = LoadImage(path, name, planUID);
+%   atlas = LoadAtlas('atlas.xml');
+%   structures = LoadStructures(path, name, image, atlas);
+%
+% Copyright (C) 2015 University of Wisconsin Board of Regents
 %
 % This program is free software: you can redistribute it and/or modify it 
 % under the terms of the GNU General Public License as published by the  
@@ -39,9 +48,11 @@ function structures = LoadStructures(varargin)
 try  
     
 % Log start of plan load and start timer
-Event(sprintf('Generating structure masks from %s for %s', varargin{2}, ...
-    varargin{3}.structureSetUID));
-tic;
+if exist('Event', 'file') == 2
+    Event(sprintf('Generating structure masks from %s for %s', varargin{2}, ...
+        varargin{3}.structureSetUID));
+    tic;
+end
 
 % The patient XML is parsed using xpath class
 import javax.xml.xpath.*
@@ -234,7 +245,8 @@ for i = 1:nodeList.getLength
             char(subnode.getFirstChild.getNodeValue));
         
     % Otherwise, the load flag was set to false during atlas matching
-    else
+    elseif exist('Event', 'file') == 2
+        
         % Notify user that this structure was skipped
         Event(['Structure ', name, ' matched exclusion list from atlas', ...
             ' and will not be loaded']);
@@ -246,8 +258,10 @@ clear i j name load node subnode nodeList subnodeList expression ...
     subexpression doc;
 
 % Log how many structures were discovered
-Event(sprintf('%i structures matched atlas for %s', n, ...
-    varargin{3}.structureSetUID));
+if exist('Event', 'file') == 2
+    Event(sprintf('%i structures matched atlas for %s', n, ...
+        varargin{3}.structureSetUID));
+end
 
 % Loop through the structures discovered
 for i = 1:n
@@ -270,13 +284,20 @@ for i = 1:n
     
     % If not pointData nodes found, warn user and stop execution
     if nodeList.getLength == 0
-        Event(['Incorrect file structure found in ', ...
-            structures{i}.filename], 'ERROR');
+        if exist('Event', 'file') == 2
+            Event(['Incorrect file structure found in ', ...
+                structures{i}.filename], 'ERROR');
+        else
+            error(['Incorrect file structure found in ', ...
+                structures{i}.filename]);
+        end
     end
     
     % Log contour being loaded
-    Event(sprintf('Loading structure %s (%i curves)', ...
-        structures{i}.name, nodeList.getLength));
+    if exist('Event', 'file') == 2
+        Event(sprintf('Loading structure %s (%i curves)', ...
+            structures{i}.name, nodeList.getLength));
+    end
     
     % Loop through ROICurves
     for j = 1:nodeList.getLength
@@ -325,7 +346,8 @@ for i = 1:n
                 end
                 
             % Otherwise, the contour data exists outside of the IEC-y 
-            else
+            elseif exist('Event', 'file') == 2
+                
                 % Warn the user that the contour did not match a slice
                 Event(['Structure ', structures{i}.name, ...
                     ' contains contours outside of image array'], 'WARN');
@@ -345,8 +367,10 @@ for i = 1:n
     if max(max(max(structures{i}.mask))) == 0
         
         % If not, warn the user that the mask is empty
-        Event(['Structure ', structures{i}.name, ...
-            ' is less than one voxel.'], 'WARN');
+        if exist('Event', 'file') == 2
+            Event(['Structure ', structures{i}.name, ...
+                ' is less than one voxel.'], 'WARN');
+        end
         
         % Clear structure from return variable
         structures{i} = [];
@@ -361,14 +385,15 @@ clear n doc factory xpath expression nodeList subNode numpoints points ...
     slice mask;
 
 % Log completion of function
-Event(sprintf('Structure load completed in %0.3f seconds', toc));
+if exist('Event', 'file') == 2
+    Event(sprintf('Structure load completed in %0.3f seconds', toc));
+end
 
 % Catch errors, log, and rethrow
 catch err
-    
-    % Delete progress handle if it exists
-    if exist('progress','var') && ishandle(progress), delete(progress); end
-    
-    % Log error via Event.m
-    Event(getReport(err, 'extended', 'hyperlinks', 'off'), 'ERROR');
+    if exist('Event', 'file') == 2
+        Event(getReport(err, 'extended', 'hyperlinks', 'off'), 'ERROR');
+    else
+        rethrow(err);
+    end
 end

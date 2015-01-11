@@ -1,4 +1,4 @@
-function referenceImage = LoadImage(path, name, planUID)
+function image = LoadImage(path, name, planUID)
 % LoadImage loads the reference CT and associated IVDT information from a 
 % specified TomoTherapy patient archive and plan UID. This function has 
 % currently been validated for version 4.X and 5.X patient archives.  This 
@@ -10,10 +10,17 @@ function referenceImage = LoadImage(path, name, planUID)
 %   planUID: UID of plan to extract reference image from
 %
 % The following variables are returned upon succesful completion:
-%   referenceImage: structure containing the image data, dimensions, width,
+%   image: structure containing the image data, dimensions, width,
 %       start coordinates, structure set UID, couch checksum and IVDT 
 %
-% Copyright (C) 2014 University of Wisconsin Board of Regents
+% Below is an example of how this function is used:
+%
+%   path = '/path/to/archive/';
+%   name = 'Anon_0001_patient.xml';
+%   planUID = '1.2.826.0.1.3680043.2.200.1688035198.217.40463.657';
+%   image = LoadImage(path, name, planUID);
+%
+% Copyright (C) 2015 University of Wisconsin Board of Regents
 %
 % This program is free software: you can redistribute it and/or modify it 
 % under the terms of the GNU General Public License as published by the  
@@ -32,9 +39,11 @@ function referenceImage = LoadImage(path, name, planUID)
 try  
     
 % Log start of image load and start timer
-Event(sprintf('Extracting reference image from %s for plan UID %s', ...
-    name, planUID));
-tic;
+if exist('Event', 'file') == 2
+    Event(sprintf('Extracting reference image from %s for plan UID %s', ...
+        name, planUID));
+    tic;
+end
 
 % The patient XML is parsed using xpath class
 import javax.xml.xpath.*
@@ -63,12 +72,17 @@ if nodeList.getLength > 0
     subnode = nodeList.item(0);
     
     % Set patient name
-    referenceImage.patientName = char(subnode.getFirstChild.getNodeValue);
-else
+    image.patientName = char(subnode.getFirstChild.getNodeValue);
 
-    % Otherwise, warn the user that patient info wasn't found
-    Event(['Patient demographics could not be found. It is possible ', ...
-        'this is not a valid patient archive.'], 'ERROR');
+% Otherwise, warn the user that patient info wasn't found
+else
+    if exist('Event', 'file') == 2
+        Event(['Patient demographics could not be found. It is possible ', ...
+            'this is not a valid patient archive.'], 'ERROR');
+    else
+        error(['Patient demographics could not be found. It is possible ', ...
+            'this is not a valid patient archive.']);
+    end
 end
 
 % Search for patient XML object patientID
@@ -85,7 +99,7 @@ if nodeList.getLength > 0
     subnode = nodeList.item(0);
     
     % Set patient ID
-    referenceImage.patientID = char(subnode.getFirstChild.getNodeValue);
+    image.patientID = char(subnode.getFirstChild.getNodeValue);
 end
 
 % Search for patient XML object patientBirthDate
@@ -102,7 +116,7 @@ if nodeList.getLength > 0
     subnode = nodeList.item(0);
     
     % Set patient birth date
-    referenceImage.patientBirthDate = ...
+    image.patientBirthDate = ...
         char(subnode.getFirstChild.getNodeValue);
 end
 
@@ -120,7 +134,7 @@ if nodeList.getLength > 0
     subnode = nodeList.item(0);
     
     % Set patient sex
-    referenceImage.patientSex = char(subnode.getFirstChild.getNodeValue);
+    image.patientSex = char(subnode.getFirstChild.getNodeValue);
 end
 
 %% Load plan info
@@ -172,12 +186,12 @@ for i = 1:nodeList.getLength
     subnode = subnodeList.item(0);
 
     % Save the IVDT UID to the return structure as char array
-    referenceImage.fullDoseIVDT = ...
+    image.fullDoseIVDT = ...
         char(subnode.getFirstChild.getNodeValue);
 
     % Load the reference plan IVDT using FindIVDT
-    referenceImage.ivdt = FindIVDT(path, ...
-        referenceImage.fullDoseIVDT, 'TomoPlan');
+    image.ivdt = FindIVDT(path, ...
+        image.fullDoseIVDT, 'TomoPlan');
 
     %% Load structure set UID
     % Search for procedure XML object planStructureSetUID
@@ -190,7 +204,7 @@ for i = 1:nodeList.getLength
     subnode = subnodeList.item(0);
 
     % Save structure set UID to return structure as char array
-    referenceImage.structureSetUID = ...
+    image.structureSetUID = ...
         char(subnode.getFirstChild.getNodeValue);
 
     %% Load couch checksum and insertion position
@@ -207,7 +221,7 @@ for i = 1:nodeList.getLength
         subnode = subnodeList.item(0);
 
         % Save the couch checksum to return structure as char array
-        referenceImage.couchChecksum = ...
+        image.couchChecksum = ...
             char(subnode.getFirstChild.getNodeValue);
     end
     
@@ -224,7 +238,7 @@ for i = 1:nodeList.getLength
         subnode = subnodeList.item(0);
 
         % Save the couch checksum to return structure as char array
-        referenceImage.couchInsertionPosition = ...
+        image.couchInsertionPosition = ...
             char(subnode.getFirstChild.getNodeValue);
     end
 
@@ -242,9 +256,11 @@ for i = 1:nodeList.getLength
         subnode = subnodeList.item(0);
 
         % Save the plan trial to return structure as char array
-        referenceImage.planTrialUID = ...
+        image.planTrialUID = ...
             char(subnode.getFirstChild.getNodeValue);
-    else
+    
+    % Otherwise, log event warning
+    elseif exist('Event', 'file') == 2
         Event(sprintf(['An approved plan trial UID this image set was not', ...
         ' found in %s'], name), 'WARN');
     end
@@ -284,7 +300,7 @@ for i = 1:nodeList.getLength
         % If the plan data array does not match the provided UID, continue to
         % next result
         if ~strcmp(char(subsubnode.getFirstChild.getNodeValue), ...
-                referenceImage.planTrialUID)
+                image.planTrialUID)
             continue
         end  
        
@@ -303,7 +319,7 @@ for i = 1:nodeList.getLength
             subsubnode = subsubnodeList.item(0);
 
             % Save the couch checksum to return structure as char array
-            referenceImage.isocenter(1) = ...
+            image.isocenter(1) = ...
                 str2double(subsubnode.getFirstChild.getNodeValue);
         end
         
@@ -321,7 +337,7 @@ for i = 1:nodeList.getLength
             subsubnode = subsubnodeList.item(0);
 
             % Save the couch checksum to return structure as char array
-            referenceImage.isocenter(2) = ...
+            image.isocenter(2) = ...
                 str2double(subsubnode.getFirstChild.getNodeValue);
         end
         
@@ -339,7 +355,7 @@ for i = 1:nodeList.getLength
             subsubnode = subsubnodeList.item(0);
 
             % Save the couch checksum to return structure as char array
-            referenceImage.isocenter(3) = ...
+            image.isocenter(3) = ...
                 str2double(subsubnode.getFirstChild.getNodeValue);
         end
         
@@ -378,8 +394,10 @@ for i = 1:nodeList.getLength
         end
 
         % Inform user that image data was found
-        Event(sprintf('Image data identified for plan UID %s', ...
-            planUID));
+        if exist('Event', 'file') == 2
+            Event(sprintf('Image data identified for plan UID %s', ...
+                planUID));
+        end
 
         %% Load CT filename
         % Search for path to ct image
@@ -393,7 +411,7 @@ for i = 1:nodeList.getLength
         subsubnode = subsubnodeList.item(0);
 
         % Store filename with a path to the binary KVCT data
-        referenceImage.filename = fullfile(path, ...
+        image.filename = fullfile(path, ...
             char(subsubnode.getFirstChild.getNodeValue));
 
         %% Load frame of reference UID
@@ -408,7 +426,7 @@ for i = 1:nodeList.getLength
         subsubnode = subsubnodeList.item(0);
 
         % Store frameRefUID
-        referenceImage.frameRefUID = ...
+        image.frameRefUID = ...
             char(subsubnode.getFirstChild.getNodeValue);
         
         %% Load image dimensions
@@ -423,7 +441,7 @@ for i = 1:nodeList.getLength
         subsubnode = subsubnodeList.item(0);
 
         % Store x dimensions to return structure
-        referenceImage.dimensions(1) = ...
+        image.dimensions(1) = ...
             str2double(subsubnode.getFirstChild.getNodeValue);
 
         % Search for y dimensions of image
@@ -437,7 +455,7 @@ for i = 1:nodeList.getLength
         subsubnode = subsubnodeList.item(0);
 
         % Store y dimensions to return structure
-        referenceImage.dimensions(2) = ...
+        image.dimensions(2) = ...
             str2double(subsubnode.getFirstChild.getNodeValue);
 
         % Search for z dimensions of image
@@ -451,7 +469,7 @@ for i = 1:nodeList.getLength
         subsubnode = subsubnodeList.item(0);
 
         % Store z dimensions to return structure
-        referenceImage.dimensions(3) = ...
+        image.dimensions(3) = ...
             str2double(subsubnode.getFirstChild.getNodeValue);
 
         %% Load start coordinates
@@ -466,7 +484,7 @@ for i = 1:nodeList.getLength
         subsubnode = subsubnodeList.item(0);
 
         % Store x start coordinate (in cm) to return structure
-        referenceImage.start(1) = ...
+        image.start(1) = ...
             str2double(subsubnode.getFirstChild.getNodeValue);
 
         % Search for the y coordinate of the first voxel
@@ -480,7 +498,7 @@ for i = 1:nodeList.getLength
         subsubnode = subsubnodeList.item(0);
 
         % Store y start coordinate (in cm) to return structure
-        referenceImage.start(2) = ...
+        image.start(2) = ...
             str2double(subsubnode.getFirstChild.getNodeValue);
 
         % Search for the z coordinate of the first voxel
@@ -494,7 +512,7 @@ for i = 1:nodeList.getLength
         subsubnode = subsubnodeList.item(0);
 
         % Store z start coordinate (in cm) to return structure
-        referenceImage.start(3) = ...
+        image.start(3) = ...
             str2double(subsubnode.getFirstChild.getNodeValue);
 
         %% Load voxel widths
@@ -509,7 +527,7 @@ for i = 1:nodeList.getLength
         subsubnode = subsubnodeList.item(0);
 
         % Store x voxel width (in cm) to return structure
-        referenceImage.width(1) = ...
+        image.width(1) = ...
             str2double(subsubnode.getFirstChild.getNodeValue);
 
         % Search for the voxel size in the y direction
@@ -523,7 +541,7 @@ for i = 1:nodeList.getLength
         subsubnode = subsubnodeList.item(0);
 
         % Store y voxel width (in cm) to return structure
-        referenceImage.width(2) = ...
+        image.width(2) = ...
             str2double(subsubnode.getFirstChild.getNodeValue);
 
         % Search for the voxel size in the z dimension
@@ -537,7 +555,7 @@ for i = 1:nodeList.getLength
         subsubnode = subsubnodeList.item(0);
 
         % Store z voxel width (in cm) to return structure
-        referenceImage.width(3) = ...
+        image.width(3) = ...
             str2double(subsubnode.getFirstChild.getNodeValue);
 
         % Reference image was found, so exit loop
@@ -550,13 +568,13 @@ end
 
 %% Load the planned image array
 % Open read file handle to binary image
-fid = fopen(referenceImage.filename, 'r', 'b');
+fid = fopen(image.filename, 'r', 'b');
 
 % Read in and store unsigned int binary data, reshaping by image dimensions
-referenceImage.data = single(reshape(fread(fid, referenceImage.dimensions(1) * ...
-    referenceImage.dimensions(2) * referenceImage.dimensions(3), 'uint16'), ...
-    referenceImage.dimensions(1), referenceImage.dimensions(2), ...
-    referenceImage.dimensions(3)));
+image.data = single(reshape(fread(fid, image.dimensions(1) * ...
+    image.dimensions(2) * image.dimensions(3), 'uint16'), ...
+    image.dimensions(1), image.dimensions(2), ...
+    image.dimensions(3)));
 
 % Close file handle
 fclose(fid);
@@ -566,12 +584,17 @@ clear fid i j node subnode subsubnode nodeList subnodeList subsubnodeList ...
     expression subexpression subsubexpression doc factory xpath;
 
 % Log conclusion of image loading
-Event(sprintf(['Reference binary image loaded successfully in %0.3f ', ...
-    'seconds with dimensions (%i, %i, %i) '], toc, ...
-    referenceImage.dimensions(1), referenceImage.dimensions(2), ...
-    referenceImage.dimensions(3)));
+if exist('Event', 'file') == 2
+    Event(sprintf(['Reference binary image loaded successfully in %0.3f ', ...
+        'seconds with dimensions (%i, %i, %i) '], toc, ...
+        image.dimensions(1), image.dimensions(2), image.dimensions(3)));
+end
 
 % Catch errors, log, and rethrow
 catch err
-    Event(getReport(err, 'extended', 'hyperlinks', 'off'), 'ERROR');
+    if exist('Event', 'file') == 2
+        Event(getReport(err, 'extended', 'hyperlinks', 'off'), 'ERROR');
+    else
+        rethrow(err);
+    end
 end

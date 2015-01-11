@@ -3,8 +3,8 @@ function dose = CalcDose(varargin)
 % inputs that can be passed to the TomoTherapy Standalone Dose Calculator, 
 % and executes the dose calculation either locally or remotely.  
 %
-% CalcDose will first attempt to calculate dose locally, if available (the 
-% system must support the which command).  If not found, the dose 
+% This function will first attempt to calculate dose locally, if available
+% (the system must support the which command).  If not found, the dose 
 % calculator inputs will be copied to a remote computation server via
 % SCP and sadose/gpusadose executed via an initiated SSH connection (See
 % the README for more infomation). 
@@ -73,7 +73,7 @@ function dose = CalcDose(varargin)
 %   % Calculate dose again, but using sadose rather than gpusadose
 %   dose = CalcDose(image, modplan, modelfolder, 1);
 %
-% Copyright (C) 2014 University of Wisconsin Board of Regents
+% Copyright (C) 2015 University of Wisconsin Board of Regents
 %
 % This program is free software: you can redistribute it and/or modify it 
 % under the terms of the GNU General Public License as published by the  
@@ -104,8 +104,10 @@ if ~exist('calcdose', 'var')
         % Log gpusadose version
         [~, str] = system('gpusadose -V');
         cellarr = textscan(str, '%s', 'delimiter', '\n');
-        Event(sprintf('Found %s at %s', char(cellarr{1}(1)), cmdout));
-
+        if exist('Event', 'file') == 2
+            Event(sprintf('Found %s at %s', char(cellarr{1}(1)), cmdout));
+        end
+        
         % Set calcdose variable
         calcdose = 1;
 
@@ -114,15 +116,19 @@ if ~exist('calcdose', 'var')
     else
 
         % Warn the user that gpusadose was not found
-        Event(['Linked application gpusadose not found, will now check ', ...
-            'for remote computation server'], 'WARN');
-
+        if exist('Event', 'file') == 2
+            Event(['Linked application gpusadose not found, will now ', ...
+                'check for remote computation server'], 'WARN');
+        end
+        
         % A try/catch statement is used in case Ganymed-SSH2 or the remote 
         % calculation server is not available
         try
             
             % Log start of javalib loading
-            Event('Adding Ganymed-SSH2 javalib');
+            if exist('Event', 'file') == 2
+                Event('Adding Ganymed-SSH2 javalib');
+            end
             
             % Determine path of current executable
             [path, ~, ~] = fileparts(mfilename('fullpath'));
@@ -131,21 +137,27 @@ if ~exist('calcdose', 'var')
             addpath(fullfile(path, 'ssh2_v2_m1_r6/')); 
             
             % Log completion
-            Event('Ganymed-SSH2 javalib added successfully');
-
+            if exist('Event', 'file') == 2
+                Event('Ganymed-SSH2 javalib added successfully');
+            end
+            
             % Establish connection to computation server.  The ssh2_config
             % parameters below should be set to the DNS/IP address of the
             % computation server, user name, and password with SSH/SCP and
             % read/write access, respectively.  See the README for more 
             % infomation
-            Event('Connecting to tomo-research via SSH2');
+            if exist('Event', 'file') == 2
+                Event('Connecting to tomo-research via SSH2');
+            end
             handles.ssh2 = ssh2_config('tomo-research', 'tomo', 'hi-art');
 
             % Test the SSH2 connection.  If this fails, catch the error 
             % below.
             [handles.ssh2, ~] = ssh2_command(handles.ssh2, 'ls');
-            Event('SSH2 connection successfully established');
-
+            if exist('Event', 'file') == 2
+                Event('SSH2 connection successfully established');
+            end
+            
             % Set calcdose variable
             calcdose = 1;
 
@@ -154,8 +166,13 @@ if ~exist('calcdose', 'var')
         catch err
 
             % Log failure
-            Event(getReport(err, 'extended', 'hyperlinks', 'off'), 'WARN');
-
+            if exist('Event', 'file') == 2
+                Event(getReport(err, 'extended', 'hyperlinks', 'off'), ...
+                    'WARN');
+            else
+                rethrow(err);
+            end
+            
             % Set calcdose temporary flag
             calcdose = 0;
         end
@@ -201,8 +218,13 @@ elseif nargin == 4
 
 % If zero, two, or more than four arguments passed, log error
 else
-    Event('An incorrect number of input arguments were passed to CalcDose', ...
-        'ERROR');
+    if exist('Event', 'file') == 2
+        Event(['An incorrect number of input arguments were passed to', ...
+            ' CalcDose'], 'ERROR');
+    else
+        error(['An incorrect number of input arguments were passed to', ...
+            ' CalcDose']);
+    end
 end
 
 % Execute in try/catch statement
@@ -226,21 +248,33 @@ end
 
 % Throw an error if the image registration pitch or yaw values are non-zero
 if plan.registration(1) ~= 0 || plan.registration(2) ~= 0
-    Event(['Dose calculation cannot handle pitch or yaw ', ...
-        'corrections at this time'], 'ERROR');
+    if exist('Event', 'file') == 2
+        Event(['Dose calculation cannot handle pitch or yaw ', ...
+            'corrections at this time'], 'ERROR');
+    else
+        error(['Dose calculation cannot handle pitch or yaw ', ...
+            'corrections at this time']);
+    end
 end
 
 % Test if the downsample factor is valid
 if mod(image.dimensions(1), downsample) ~= 0
-    Event(['The downsample factor is not an even divisor of the ', ...
-        'image dimensions'], 'ERROR'); 
+    if exist('Event', 'file') == 2
+        Event(['The downsample factor is not an even divisor of the ', ...
+            'image dimensions'], 'ERROR');
+    else
+        error(['The downsample factor is not an even divisor of the ', ...
+            'image dimensions']);
+    end
 end
 
 %% Start dose calculation
 % Log beginning of dose calculation and start timer
-Event(sprintf('Beginning dose calculation using downsampling factor of %i', ...
-    downsample));
-tic
+if exist('Event', 'file') == 2
+    Event(sprintf('Beginning dose calculation using downsampling factor of %i', ...
+        downsample));
+    tic
+end
 
 % If new image data was passed, re-create temporary directory, CT .header 
 % and .img files, dose.cfg, and copy beam model files
@@ -256,19 +290,28 @@ if nargin >= 2
     % If status is 0, the command was successful; otherwise, log an
     % error
     if status > 0
-        Event(['Error creating temporary folder for dose calculation, ', ...
-            'system returned the following: ', cmdout], 'ERROR');
+        if exist('Event', 'file') == 2
+            Event(['Error creating temporary folder for dose calculation, ', ...
+                'system returned the following: ', cmdout], 'ERROR');
+        else
+            error(['Error creating temporary folder for dose calculation, ', ...
+                'system returned the following: ', cmdout]);
+        end
     end
 
     % Log successful completion
-    Event(['Temporary folder created at ', folder]);
-
+    if exist('Event', 'file') == 2
+        Event(['Temporary folder created at ', folder]);
+    end
+    
     % Clear temporary variables
     clear status cmdout;
 
     %% Write CT.header
-    Event(['Writing ct.header to ', folder]);
-
+    if exist('Event', 'file') == 2
+        Event(['Writing ct.header to ', folder]);
+    end
+    
     % Generate a temporary file on the local computer to store the CT
     % header dose calculator input file.  Then open a write file handle 
     % to the temporary CT header file.
@@ -327,8 +370,10 @@ if nargin >= 2
     clear fid;
 
     %% Write ct_0.img
-    Event(['Writing ct_0.img to ', folder]);
-
+    if exist('Event', 'file') == 2
+        Event(['Writing ct_0.img to ', folder]);
+    end
+    
     % Generate a temporary file on the local computer to store the
     % ct_0.img dose calculator input file (binary CT image). Then open 
     % a write file handle to the temporary ct_0.img file.
@@ -345,8 +390,10 @@ if nargin >= 2
     clear fid;
 
     %% Write reference dose.cfg
-    Event(['Writing dose.cfg to ', folder]);
-
+    if exist('Event', 'file') == 2
+        Event(['Writing dose.cfg to ', folder]);
+    end
+    
     % Generate a temporary file on the local computer to store the
     % dose.cfg dose calculator input file. Then open a write file 
     % handle to the temporary file
@@ -413,7 +460,10 @@ if nargin >= 2
     clear fid;
 
     %% Load pre-defined beam model PDUT files (dcom, kernel, lft, etc)
-    Event(['Copying beam model files from ', modelfolder, '/ to ', folder]);
+    if exist('Event', 'file') == 2
+        Event(['Copying beam model files from ', modelfolder, '/ to ', ...
+            folder]);
+    end
 
     % The dose calculator also requires the following beam model files.
     % As these files do not change between patients (for the same machine),
@@ -424,8 +474,13 @@ if nargin >= 2
 
     % If status is 0, cp was successful.  Otherwise, log error
     if status > 0
-        Event(['Error occurred copying beam model files to temporary ', ...
-            'directory: ', cmdout], 'ERROR');
+        if exist('Event', 'file') == 2
+            Event(['Error occurred copying beam model files to temporary ', ...
+                'directory: ', cmdout], 'ERROR');
+        else
+            error(['Error occurred copying beam model files to temporary ', ...
+                'directory: ', cmdout]);
+        end
     end
 
     % Clear temporary variables
@@ -440,7 +495,9 @@ if nargin >= 2
         remotefolder = ['/tmp/', strrep(dicomuid, '.', '_')];
 
         % Make temporary directory on remote server 
-        Event(['Creating remote directory ', remotefolder]);
+        if exist('Event', 'file') == 2
+            Event(['Creating remote directory ', remotefolder]);
+        end
         [ssh2, ~] = ssh2_command(ssh2, ['mkdir ', remotefolder]);
 
         % Get local temporary folder contents
@@ -455,7 +512,9 @@ if nargin >= 2
                     ~strcmp(list(i).name, 'plan.img')
                 
                 % Log copy
-                Event(['Secure copying file ', list(i).name]);
+                if exist('Event', 'file') == 2
+                    Event(['Secure copying file ', list(i).name]);
+                end
                 
                 % Copy file via scp_put
                 ssh2 = scp_put(ssh2, list(i).name, remotefolder, folder);
@@ -468,7 +527,9 @@ if nargin >= 2
 end
 
 %% Write plan.header
-Event(['Writing plan.header to ', folder]);
+if exist('Event', 'file') == 2
+    Event(['Writing plan.header to ', folder]);
+end
 
 % Generate a temporary file on the local computer to store the
 % plan.header dose calculator input file. Then open a write file handle 
@@ -492,7 +553,7 @@ for i = 1:size(plan.events, 1)
             plan.events{i,3} - plan.registration(4)]);
         
         % If a registration exists, log adjustment
-        if plan.registration(4) ~= 0
+        if plan.registration(4) ~= 0 && exist('Event', 'file') == 2
             Event(sprintf('Applied isoX registration adjustment %G cm', ...
                 - plan.registration(4)));
         end
@@ -505,7 +566,7 @@ for i = 1:size(plan.events, 1)
             plan.events{i,3} + plan.registration(6)]);
         
         % If a registration exists, log adjustment
-        if plan.registration(6) ~= 0
+        if plan.registration(6) ~= 0 && exist('Event', 'file') == 2
             Event(sprintf('Applied isoY registration adjustment %G cm', ...
                 plan.registration(6)));
         end
@@ -518,7 +579,7 @@ for i = 1:size(plan.events, 1)
             plan.events{i,3} - plan.registration(5)]);
         
         % If a registration exists, log adjustment
-        if plan.registration(5) ~= 0
+        if plan.registration(5) ~= 0 && exist('Event', 'file') == 2
             Event(sprintf('Applied isoZ registration adjustment %G cm', ...
                 plan.registration(5)));
         end
@@ -531,7 +592,7 @@ for i = 1:size(plan.events, 1)
             plan.events{i,3} + plan.registration(3) * 180/pi]);
         
         % If a registration exists, log adjustment
-        if plan.registration(3) ~= 0
+        if plan.registration(3) ~= 0 && exist('Event', 'file') == 2
             Event(sprintf('Applied roll registration adjustment %G degrees', ...
                 plan.registration(3) * 180/pi));
         end
@@ -569,7 +630,9 @@ fclose(fid);
 clear i fid;
 
 %% Write plan.img
-Event(['Writing plan.img to ', folder]);
+if exist('Event', 'file') == 2
+    Event(['Writing plan.img to ', folder]);
+end
 
 % Extend sinogram to full size given start and stopTrim
 sinogram = zeros(64, plan.numberOfProjections);
@@ -607,18 +670,24 @@ if exist('ssh2', 'var') && ~isempty(ssh2)
     
     
     % Copy plan.header using scp_put
-    Event('Secure copying file plan.header');
+    if exist('Event', 'file') == 2
+        Event('Secure copying file plan.header');
+    end
     ssh2 = scp_put(ssh2, 'plan.header', remotefolder, folder);
 
     % Copy plan.img using scp_put
-    Event('Secure copying file plan.img');
+    if exist('Event', 'file') == 2
+        Event('Secure copying file plan.img');
+    end
     ssh2 = scp_put(ssh2, 'plan.img', remotefolder, folder);
 
     % If using gpusadose
     if sadose == 0
         
         % Execute gpusadose in the remote server temporary directory
-        Event('Executing gpusadose on remote server');
+        if exist('Event', 'file') == 2
+            Event('Executing gpusadose on remote server');
+        end
         ssh2 = ssh2_command(ssh2, ['cd ', remotefolder, ...
             '; gpusadose -C dose.cfg']);
     
@@ -626,13 +695,17 @@ if exist('ssh2', 'var') && ~isempty(ssh2)
     else
         
         % Execute gpusadose in the remote server temporary directory
-        Event('Executing sadose on remote server');
+        if exist('Event', 'file') == 2
+            Event('Executing sadose on remote server');
+        end
         ssh2 = ssh2_command(ssh2, ['cd ', remotefolder, ...
             '; sadose -C dose.cfg']);
     end
     
     % Retrieve dose image to the temporary directory on the local computer
-    Event('Retrieving calculated dose image from remote direcory');
+    if exist('Event', 'file') == 2
+        Event('Retrieving calculated dose image from remote direcory');
+    end
     ssh2 = scp_get(ssh2, 'dose.img', folder, remotefolder);
     
 %% Otherwise execute gpusadose locally
@@ -641,11 +714,15 @@ else
     if sadose == 0
         
         % First, initialize and clear GPU memory
-        Event('Clearing GPU memory');
+        if exist('Event', 'file') == 2
+            Event('Clearing GPU memory');
+        end
         gpuDevice(1);
 
         % cd to temporary folder, then call gpusadose
-        Event(['Executing gpusadose -C ', folder,'/dose.cfg']);
+        if exist('Event', 'file') == 2
+            Event(['Executing gpusadose -C ', folder,'/dose.cfg']);
+        end
         [status, cmdout] = ...
             system(['cd ', folder, '; gpusadose -C ./dose.cfg']);
 
@@ -653,7 +730,9 @@ else
     else
         
         % cd to temporary folder, then call sadose
-        Event(['Executing sadose -C ', folder,'/dose.cfg']);
+        if exist('Event', 'file') == 2
+            Event(['Executing sadose -C ', folder,'/dose.cfg']);
+        end
         [status, cmdout] = ...
             system(['cd ', folder, '; sadose -C ./dose.cfg']);
         
@@ -663,10 +742,14 @@ else
     if status > 0
         
         % Log output as error
-        Event(cmdout, 'ERROR');
+        if exist('Event', 'file') == 2
+            Event(cmdout, 'ERROR');
+        else
+            error(cmdout);
+        end
         
     % Otherwise, an error was returned from the system call
-    else
+    elseif exist('Event', 'file') == 2
         
         % Log output not as an error
         Event(cmdout);
@@ -677,7 +760,9 @@ else
 end
 
 %% Read in dose image
-Event(['Reading dose.img from ', folder]);
+if exist('Event', 'file') == 2
+    Event(['Reading dose.img from ', folder]);
+end
 
 % Open a read file handle to the dose image
 fid = fopen(fullfile(folder, 'dose.img'), 'r');
@@ -702,8 +787,10 @@ dose.data = zeros(image.dimensions);
 if downsample > 1
     
     % Log interpolation stemp
-    Event(sprintf(['Upsampling calculated dose image by %i using nearest ', ...
-        'neighbor interpolation'], downsample));
+    if exist('Event', 'file') == 2
+        Event(sprintf(['Upsampling calculated dose image by %i using ', ...
+            'nearest neighbor interpolation'], downsample));
+    end
     
     % Loop through each axial dose slice
     for i = 1:image.dimensions(3)
@@ -735,10 +822,16 @@ dose.width = image.width;
 dose.dimensions = image.dimensions;
 
 % Log dose calculation completion
-Event(sprintf('Dose calculation completed in %0.3f seconds', toc));
+if exist('Event', 'file') == 2
+    Event(sprintf('Dose calculation completed in %0.3f seconds', toc));
+end
 
 % Catch errors, log, and rethrow
 catch err
-    Event(getReport(err, 'extended', 'hyperlinks', 'off'), 'ERROR');
+    if exist('Event', 'file') == 2
+        Event(getReport(err, 'extended', 'hyperlinks', 'off'), 'ERROR');
+    else
+        rethrow(err);
+    end
 end
     

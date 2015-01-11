@@ -1,7 +1,7 @@
 function planData = LoadPlan(path, name, planUID)
 % LoadPlan loads the delivery plan from a specified TomoTherapy patient 
 % archive and plan trial UID.  This data can be used to perform dose 
-% calculation via CalcDose.m. This function has currently been validated 
+% calculation via CalcDose. This function has currently been validated 
 % for version 4.X and 5.X patient archives.
 %
 % The following variables are required for proper execution: 
@@ -14,7 +14,14 @@ function planData = LoadPlan(path, name, planUID)
 %       number of projections, number of leaves, sync/unsync actions, 
 %       leaf sinogram, isocenter, and planTrialUID
 %
-% Copyright (C) 2014 University of Wisconsin Board of Regents
+% Below is an example of how this function is used:
+%
+%   path = '/path/to/archive/';
+%   name = 'Anon_0001_patient.xml';
+%   planUID = '1.2.826.0.1.3680043.2.200.1688035198.217.40463.657';
+%   plan = LoadPlan(path, name, planUID);
+%
+% Copyright (C) 2015 University of Wisconsin Board of Regents
 %
 % This program is free software: you can redistribute it and/or modify it 
 % under the terms of the GNU General Public License as published by the  
@@ -33,9 +40,11 @@ function planData = LoadPlan(path, name, planUID)
 try  
     
 % Log start of plan load and start timer
-Event(sprintf(['Extracting delivery plan from %s for plan ', ...
-    'UID %s'], name, planUID));
-tic;
+if exist('Event', 'file') == 2
+    Event(sprintf(['Extracting delivery plan from %s for plan ', ...
+        'UID %s'], name, planUID));
+    tic;
+end
 
 % Return input variables in the return variable planData
 planData.xmlPath = path;
@@ -46,7 +55,9 @@ planData.planUID = planUID;
 import javax.xml.xpath.*
 
 % Read in the patient XML and store the Document Object Model node to doc
-Event('Loading file contents data using xmlread');
+if exist('Event', 'file') == 2
+    Event('Loading file contents data using xmlread');
+end
 doc = xmlread(fullfile(path, name));
 
 % Initialize a new xpath instance to the variable factory
@@ -74,8 +85,13 @@ if nodeList.getLength > 0
 else
 
     % Otherwise, warn the user that patient info wasn't found
-    Event(['Patient demographics could not be found. It is possible ', ...
-        'this is not a valid patient archive.'], 'ERROR');
+    if exist('Event', 'file') == 2
+        Event(['Patient demographics could not be found. It is possible ', ...
+            'this is not a valid patient archive.'], 'ERROR');
+    else
+        error(['Patient demographics could not be found. It is possible ', ...
+            'this is not a valid patient archive.']);
+    end
 end
 
 % Search for patient XML object patientID
@@ -200,12 +216,19 @@ end
 
 % If not plan trial UID was found, stop
 if ~isfield(planData, 'planTrialUID')
-    Event(sprintf(['An approved plan trial UID for plan UID %s was not', ...
-        ' found in %s'], planUID, name), 'ERROR');
+    if exist('Event', 'file') == 2
+        Event(sprintf(['An approved plan trial UID for plan UID %s was ', ...
+            'not found in %s'], planUID, name), 'ERROR');
+    else
+        error(['An approved plan trial UID for plan UID %s was ', ...
+            'not found in %s'], planUID, name);
+    end
 end
 
 %% Load Fluence Delivery Plan
-Event('Searching for fluence delivery plan');
+if exist('Event', 'file') == 2
+    Event('Searching for fluence delivery plan');
+end
 
 % Search for fluence delivery plan associated with the plan trial
 expression = ...
@@ -793,8 +816,10 @@ planData.events = sortrows(planData.events);
 
 %% Save fluence sinogram
 % Log start of sinogram load
-Event(sprintf('Loading delivery plan binary data from %s', ...
-    planData.fluenceFilename));
+if exist('Event', 'file') == 2
+    Event(sprintf('Loading delivery plan binary data from %s', ...
+        planData.fluenceFilename));
+end
 
 % Open a read file handle to the delivery plan binary array 
 fid = fopen(planData.fluenceFilename, 'r', 'b');
@@ -870,7 +895,9 @@ end
 planData.sinogram = sinogram(:, planData.startTrim:planData.stopTrim);
 
 %% Load machine agnostic delivery plan
-Event('Searching for machine agnostic plan');
+if exist('Event', 'file') == 2
+    Event('Searching for machine agnostic plan');
+end
 
 % Search for fluence delivery plan associated with the plan trial
 expression = ...
@@ -995,8 +1022,10 @@ end
 
 %% Save machine agnostic sinogram
 % Log start of sinogram load
-Event(sprintf('Loading delivery plan binary data from %s', ...
-    planData.agnosticFilename));
+if exist('Event', 'file') == 2
+    Event(sprintf('Loading delivery plan binary data from %s', ...
+        planData.agnosticFilename));
+end
 
 % Open a read file handle to the delivery plan binary array 
 fid = fopen(planData.agnosticFilename, 'r', 'b');
@@ -1042,9 +1071,11 @@ planData.agnostic = sinogram(:, planData.startTrim:planData.stopTrim);
 
 %% Finish up
 % Report success
-Event(sprintf(['Plan data loaded successfully with %i events and %i', ...
-    ' projections in %0.3f seconds'], size(planData.events, 1), ...
-    planData.numberOfProjections, toc));
+if exist('Event', 'file') == 2
+    Event(sprintf(['Plan data loaded successfully with %i events and %i', ...
+        ' projections in %0.3f seconds'], size(planData.events, 1), ...
+        planData.numberOfProjections, toc));
+end
 
 % Clear temporary variables
 clear fid i j node subnode subsubnode nodeList subnodeList subsubnodeList ...
@@ -1052,5 +1083,9 @@ clear fid i j node subnode subsubnode nodeList subnodeList subsubnodeList ...
 
 % Catch errors, log, and rethrow
 catch err
-    Event(getReport(err, 'extended', 'hyperlinks', 'off'), 'ERROR');
+    if exist('Event', 'file') == 2
+        Event(getReport(err, 'extended', 'hyperlinks', 'off'), 'ERROR');
+    else
+        rethrow(err);
+    end
 end

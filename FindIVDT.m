@@ -1,9 +1,9 @@
 function ivdt = FindIVDT(path, id, type)
 % FindIVDT searches for the IVDT associated with a daily image, reference
-% image, or machine.  If `MVCT`, the calibration UID provided is searched 
+% image, or machine.  If 'MVCT', the calibration UID provided is searched 
 % for in the machine archive, and the corresponding IVDT is returned.  If 
-% `TomoPlan`, the IVDT UID is the correct value, the IVDT is loaded for 
-% that value.  If `TomoMachine`, the machine archive is parsed for the most 
+% 'TomoPlan', the IVDT UID is the correct value, the IVDT is loaded for 
+% that value.  If 'TomoMachine', the machine archive is parsed for the most 
 % recent imaging equipment and the UID is returned.
 %
 % The following variables are required for proper execution: 
@@ -11,13 +11,19 @@ function ivdt = FindIVDT(path, id, type)
 %   id: identifier, dependent on type. If MVCT, id should be the delivered 
 %       machine calibration UID; if TomoPlan, shound be the full dose IVDT 
 %       UID; if 'TomoMachine', should be the machine name
-%   type: type of UID to extract IVDT for.  Can be `MVCT`, `TomoPlan`, or 
-%       `TomoMachine`. 
+%   type: type of UID to extract IVDT for.  Can be 'MVCT', 'TomoPlan', or 
+%       'TomoMachine'. 
 %
 % The following variables are returned upon succesful completion:
-%   ivdt: n-by-2 array of associated CT number/density pairs  
+%   ivdt: n-by-2 array of associated CT number/density pairs
 %
-% Copyright (C) 2014 University of Wisconsin Board of Regents
+% Below is an example of how this function is used:
+%   
+%   path = '/path/to/archive/';
+%   id = '1.2.826.0.1.3680043.2.200.1693609359.434.30969.2213';
+%   ivdt = FindIVDT(path, id, 'TomoPlan');
+%
+% Copyright (C) 2015 University of Wisconsin Board of Regents
 %
 % This program is free software: you can redistribute it and/or modify it 
 % under the terms of the GNU General Public License as published by the  
@@ -32,6 +38,9 @@ function ivdt = FindIVDT(path, id, type)
 % You should have received a copy of the GNU General Public License along 
 % with this program. If not, see http://www.gnu.org/licenses/.
 
+% Execute in try/catch statement
+try
+
 % Initialize imagingUID temporary string and empty return array
 imagingUID = '';
 ivdt = [];
@@ -44,26 +53,34 @@ switch type
 
 % If type is MVCT
 case 'MVCT'
+    
     % Log start of search for MVCT IVDT
-    Event('Beginning search for MVCT IVDT');
+    if exist('Event', 'file') == 2
+        Event('Beginning search for MVCT IVDT');
+    end
     
     % Search for all machine XMLs in the patient archive folder
     machinelist = dir(fullfile(path, '*_machine.xml'));
     
     % Log location of xml path
-    Event(sprintf('Searching for machine archives in %s', path));
+    if exist('Event', 'file') == 2
+        Event(sprintf('Searching for machine archives in %s', path));
+    end
     
     % The machine XML is parsed using xpath class
     import javax.xml.xpath.*
 
     % Loop through the machine XMLs
     for i = 1:size(machinelist,1)
+        
         % Read in the Machine XML and store the Document Object Model node
         doc = xmlread(fullfile(path, machinelist(i).name));
         
         % Log the machine xml being searched
-        Event(sprintf('Initializing XPath instance for %s', ...
-            machinelist(i).name));
+        if exist('Event', 'file') == 2
+            Event(sprintf('Initializing XPath instance for %s', ...
+                machinelist(i).name));
+        end
         
         % Initialize a new xpath instance to the variable factory
         factory = XPathFactory.newInstance;
@@ -72,8 +89,10 @@ case 'MVCT'
         xpath = factory.newXPath;
         
         % Log start of calibration array search
-        Event(['Searching for calibration records in ', ...
-            machinelist(i).name]);
+        if exist('Event', 'file') == 2
+            Event(['Searching for calibration records in ', ...
+                machinelist(i).name]);
+        end
 
         % Search for the correct machine calibration array
         expression = xpath.compile('//calibrationArray/calibrationArray');
@@ -84,12 +103,20 @@ case 'MVCT'
         % If no calibration array was found, it is possible this file is 
         % not a machine equipment archive, so skip to the next result
         if nodeList.getLength == 0
+            
             % Warn user that no calibration arrays were found in machine
             % archive
-            Event(sprintf('No calibration data found in %s', ...
-                machinelist(i).name), 'WARN');
-            continue
-        else
+            if exist('Event', 'file') == 2
+                Event(sprintf('No calibration data found in %s', ...
+                    machinelist(i).name), 'WARN');
+            end
+            
+            % Continue to next result
+            continue;
+          
+        % Otherwise, log result
+        elseif exist('Event', 'file') == 2
+            
             % Log number of calibration arrays found
             Event(sprintf('%i calibration records found', ...
                 nodeList.getLength)); 
@@ -97,6 +124,7 @@ case 'MVCT'
         
         % Loop through the results
         for j = 1:nodeList.getLength
+            
             % Set a handle to the current result
             node = nodeList.item(j-1);
 
@@ -111,13 +139,17 @@ case 'MVCT'
             % If the calibration matches uid, search for the
             % defaultImagingEquiment
             if strcmp(char(subnode.getFirstChild.getNodeValue), id) == 0
+                
                 % Continue to next search result
                 continue
             else
+                
                 % Search for calibration UID
                 subexpression = ...
                     xpath.compile('defaultImagingEquipmentUID');
-                Event(sprintf('Found calibration data UID %s', id));
+                if exist('Event', 'file') == 2
+                    Event(sprintf('Found calibration data UID %s', id));
+                end
 
                 % Evaluate xpath expression and retrieve the results
                 subnodeList = subexpression.evaluate(node, ...
@@ -129,8 +161,10 @@ case 'MVCT'
                 imagingUID = char(subnode.getFirstChild.getNodeValue);
                 
                 % Log the imagingUID
-                Event(sprintf('Set imaging equipment UID to %s', ...
-                    imagingUID));
+                if exist('Event', 'file') == 2
+                    Event(sprintf('Set imaging equipment UID to %s', ...
+                        imagingUID));
+                end
                 
                 % Since the correct IVDT was found, break the for loop
                 break;    
@@ -147,19 +181,25 @@ case 'MVCT'
     
 % Otherwise, if type is TomoPlan
 case 'TomoPlan'
+    
     % UID passed to FindIVDT is imaging equipment, so this one's easy
     imagingUID = id;
 
 % Otherwise, if type is TomoMachine
 case 'TomoMachine'
+    
     % Log start of IVDT search
-    Event('Beginning search for most recent machine IVDT');
+    if exist('Event', 'file') == 2
+        Event('Beginning search for most recent machine IVDT');
+    end
     
     % Search for all machine XMLs in the patient archive folder
-    machinelist = dir(fullfile(path,'*_machine.xml'));
+    machinelist = dir(fullfile(path, '*_machine.xml'));
     
     % Log location of xml path
-    Event(sprintf('Searching for machine archives in %s', path));
+    if exist('Event', 'file') == 2
+        Event(sprintf('Searching for machine archives in %s', path));
+    end
     
     % The machine XML is parsed using xpath class
     import javax.xml.xpath.*
@@ -169,12 +209,15 @@ case 'TomoMachine'
      
     % Loop through the machine XMLs
     for i = 1:size(machinelist,1)
+        
         % Read in the Machine XML and store the Document Object Model node
         doc = xmlread(fullfile(path, machinelist(i).name));
         
         % Log machine xml being searched
-        Event(sprintf('Initializing XPath instance for %s', ...
-            machinelist(i).name));
+        if exist('Event', 'file') == 2
+            Event(sprintf('Initializing XPath instance for %s', ...
+                machinelist(i).name));
+        end
         
         % Initialize a new xpath instance to the variable factory
         factory = XPathFactory.newInstance;
@@ -191,11 +234,17 @@ case 'TomoMachine'
         % If no machine name was found, it is possible this file is 
         % not a machine equipment archive, so skip to the next result
         if nodeList.getLength == 0
+            
             % Warn user that a machine XML without a machine name exists
-            Event(sprintf('No machine name found in %s', ...
-                machinelist(i).name), 'WARN');
+            if exist('Event', 'file') == 2
+                Event(sprintf('No machine name found in %s', ...
+                    machinelist(i).name), 'WARN');
+            end
+            
+            % Continue to next result
             continue
         else
+            
             % Otherwise, retrieve result
             node = nodeList.item(0);
             
@@ -205,12 +254,16 @@ case 'TomoMachine'
             end
             
             % Otherwise, the correct machine was found
-            Event(['Machine archive found for ', id]); 
+            if exist('Event', 'file') == 2
+                Event(['Machine archive found for ', id]); 
+            end
         end
         
         % Log start of calibration array search
-        Event(['Searching for calibration records in ', ...
-            machinelist(i).name]);
+        if exist('Event', 'file') == 2
+            Event(['Searching for calibration records in ', ...
+                machinelist(i).name]);
+        end
         
         % Declare new xpath search for all machine calibration arrays
         expression = xpath.compile('//calibrationArray/calibrationArray');
@@ -221,12 +274,20 @@ case 'TomoMachine'
         % If no calibration array was found, it is possible this file is 
         % not a machine equipment archive, so skip to the next result
         if nodeList.getLength == 0
+            
             % Warn user that no calibration arrays were found in machine
             % archive
-            Event(sprintf('No calibration data found in %s', ...
-                machinelist(i).name), 'WARN');
-            continue
-        else
+            if exist('Event', 'file') == 2
+                Event(sprintf('No calibration data found in %s', ...
+                    machinelist(i).name), 'WARN');
+            end
+            
+            % Continue to next result
+            continue;
+            
+        % Otherwise log results
+        elseif exist('Event', 'file') == 2
+            
             % Log number of calibration records found
             Event(sprintf('%i calibration records found', ...
                 nodeList.getLength)); 
@@ -234,6 +295,7 @@ case 'TomoMachine'
         
         % Loop through the results
         for j = 1:nodeList.getLength
+            
             % Set a handle to the current result
             node = nodeList.item(j-1);
 
@@ -302,7 +364,9 @@ case 'TomoMachine'
         end
         
         % Inform user which imaging equipment was found
-        Event(sprintf('Set imaging equipment UID to %s', imagingUID));
+        if exist('Event', 'file') == 2
+            Event(sprintf('Set imaging equipment UID to %s', imagingUID));
+        end
         
         % Since the correct machine was found, break the for loop
         break;
@@ -314,22 +378,33 @@ case 'TomoMachine'
     
 % Otherwise, an incorrect type was passed    
 otherwise    
-    Event('Incorrect type passed to FindIVDT', 'ERROR');  
+    if exist('Event', 'file') == 2
+        Event('Incorrect type passed to FindIVDT', 'ERROR');
+    else
+        error('Incorrect type passed to FindIVDT');
+    end
 end
 
 % If no matching imaging equipment was found, notify user
 if strcmp(imagingUID, '')
-    Event('An imaging equipment UID was not found', 'ERROR');
+    if exist('Event', 'file') == 2
+        Event('An imaging equipment UID was not found', 'ERROR');
+    else
+        error('An imaging equipment UID was not found');
+    end
 end
 
 % Notify user that imaging archives are now being searched
-Event(sprintf('Searching %s for imaging equipment archives', path));
+if exist('Event', 'file') == 2
+    Event(sprintf('Searching %s for imaging equipment archives', path));
+end
 
 % Search for all imaging equipment XMLs in the patient archive folder
 ivdtlist = dir(fullfile(path,'*_imagingequipment.xml'));
 
 % Loop through the image equipment XMLs
 for i = 1:size(ivdtlist,1)
+    
     % Read in the IVDT XML and store the Document Object Model node to doc
     doc = xmlread(fullfile(path, ivdtlist(i).name));
 
@@ -348,11 +423,16 @@ for i = 1:size(ivdtlist,1)
     % If no database UID was found, it is possible this file is not
     % an imaging equipment archive, so skip to the next result
     if nodeList.getLength == 0
+        
         % Warn user that an imaging equipment XML was found without a
         % database UID
-        Event(sprintf('No database UID found in %s', ivdtlist(i).name), ...
-            'WARN');
-        continue
+        if exist('Event', 'file') == 2
+            Event(sprintf('No database UID found in %s', ivdtlist(i).name), ...
+                'WARN');
+        end
+        
+        % Continue to next result
+        continue;
     end
 
     % Retrieve a handle to the databaseUID result
@@ -363,10 +443,14 @@ for i = 1:size(ivdtlist,1)
     if strcmp(char(node.getFirstChild.getNodeValue),imagingUID)
         
         % Notify the user that a matching UID was found
-        Event(sprintf('Matched IVDT UID %s in %s', ...
-            imagingUID, ivdtlist(i).name));
+        if exist('Event', 'file') == 2
+            Event(sprintf('Matched IVDT UID %s in %s', ...
+                imagingUID, ivdtlist(i).name));
+        end
+        
+    % Otherwise, continue to next result    
     else
-        continue
+        continue;
     end
 
     % Declare new xpath search expression for sinogram file
@@ -417,8 +501,10 @@ for i = 1:size(ivdtlist,1)
         factory xpath;
     
     % Log completion of search
-    Event(sprintf('IVDT data retrieved for %s in %0.3f seconds', ...
-        imagingUID, toc));
+    if exist('Event', 'file') == 2
+        Event(sprintf('IVDT data retrieved for %s in %0.3f seconds', ...
+            imagingUID, toc));
+    end
     
     % Since the correct IVDT was found, break the for loop
     break;
@@ -426,9 +512,22 @@ end
 
 % If the size of ivdt is still zero, not matching IVDT UID was found
 if size(ivdt,1) == 0
-    Event(sprintf('A matching IVDT was not found for UID %s', ...
-        imagingUID), 'ERROR');
+    if exist('Event', 'file') == 2
+        Event(sprintf('A matching IVDT was not found for UID %s', ...
+            imagingUID), 'ERROR');
+    else
+        error('A matching IVDT was not found for UID %s', imagingUID);
+    end
 end
     
 % Clear temporary variable
 clear imagingUID;
+
+% Catch errors, log, and rethrow
+catch err
+    if exist('Event', 'file') == 2
+        Event(getReport(err, 'extended', 'hyperlinks', 'off'), 'ERROR');
+    else
+        rethrow(err);
+    end
+end
