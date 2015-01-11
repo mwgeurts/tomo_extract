@@ -5,7 +5,7 @@ by Mark Geurts <mark.w.geurts@gmail.com>
 
 The TomoTherapy&reg; Archive Extraction Tools are a compilation of functions that parse [TomoTherapy](http://www.accuray.com) patient archives and into MATLAB structures and arrays.  In addition, a function is included which can use these variables for dose calculation. These tools are used in various applications, including [exit_detector](https://github.com/mwgeurts/exit_detector), [systematic_error](https://github.com/mwgeurts/systematic_error), and [mvct_dose](https://github.com/mwgeurts/mvct_dose).
 
-These tools use the [SSH/SFTP/SCP for Matlab (v2)] (http://www.mathworks.com/matlabcentral/fileexchange/35409-sshsftpscp-for-matlab-v2) interface based on the Ganymed-SSH2 javalib for sending files between and executing commands on a research workstation and has been included in this repository.  Refer to the [Third Party Statements](README.md#third-party-statements) for copyright information of this interface.
+These tools use the [SSH/SFTP/SCP for Matlab (v2)] (http://www.mathworks.com/matlabcentral/fileexchange/35409-sshsftpscp-for-matlab-v2) interface based on the Ganymed-SSH2 javalib for sending files between and executing commands on a research workstation, which has been included in this repository.  Refer to the [Third Party Statements](README.md#third-party-statements) for copyright information of this interface.
 
 TomoTherapy is a registered trademark of Accuray Incorporated.
 
