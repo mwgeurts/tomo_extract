@@ -13,7 +13,7 @@ TomoTherapy is a registered trademark of Accuray Incorporated.
 
 * [Installation and Use](README.md#installation-and-use)
 * [Compatibility and Requirements](README.md#compatibility-and-requirements)
-* [Archive Tools](README.md#archive-tools)
+* [Tools and Examples](README.md#tools-and-examples)
   * [LoadImage](README.md#loadimage)
   * [LoadStructures](README.md#loadstructures)
   * [LoadPlan](README.md#loadplan)
@@ -37,7 +37,7 @@ ssh2 = ssh2_config('tomo-research', 'tomo', 'hi-art');
 
 The TomoTherapy Archive Extraction Tools have been validated for 4.X and 5.X patient archives using MATLAB versions 8.3 through 8.5 on Macintosh OSX 10.8 (Mountain Lion) through 10.10 (Yosemite).  These tools use the `javax.xml.xpath` Java library and `xmlread()` MATLAB function for parsing archive XML files.
 
-## Archive Tools
+## Tools and Examples
 
 The following subsections describe what inputs and return variables are used, and provides examples for basic operation of each tool. For more information, refer to the documentation within the source code.
 
