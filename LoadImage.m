@@ -231,7 +231,7 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
-    % If a couch checksum was found
+    % If a couch insertion position was found
     if subnodeList.getLength > 0
         
         % Store the first returned value
