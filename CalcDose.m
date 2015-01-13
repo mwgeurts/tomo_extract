@@ -93,7 +93,7 @@ function dose = CalcDose(varargin)
 persistent calcdose folder remotefolder modelfolder image sadose ssh2;
 
 % If dose calculation capability has not yet been determined 
-if ~exist('calcdose', 'var')
+if ~exist('calcdose', 'var') || isempty(calcdose)
     
     % Check for gpusadose locally
     [~, cmdout] = system('which gpusadose');
@@ -149,11 +149,11 @@ if ~exist('calcdose', 'var')
             if exist('Event', 'file') == 2
                 Event('Connecting to tomo-research via SSH2');
             end
-            handles.ssh2 = ssh2_config('tomo-research', 'tomo', 'hi-art');
+            ssh2 = ssh2_config('tomo-research', 'tomo', 'hi-art');
 
             % Test the SSH2 connection.  If this fails, catch the error 
             % below.
-            [handles.ssh2, ~] = ssh2_command(handles.ssh2, 'ls');
+            [ssh2, ~] = ssh2_command(ssh2, 'ls');
             if exist('Event', 'file') == 2
                 Event('SSH2 connection successfully established');
             end
@@ -611,12 +611,12 @@ for i = 0:63
     % open projections for this leaf, so write 0
     if i < plan.lowerLeafIndex ...
             || i >= plan.lowerLeafIndex + plan.numberOfLeaves
-        fprintf(fid,'leaf.count.%02i=0\n',i);
+        fprintf(fid, 'leaf.count.%02i=0\n', i);
 
     % Otherwise, write n, where n is the total number of projections in
     % the plan (note that a number of them may still be empty/zero)
     else
-        fprintf(fid,'leaf.count.%02i=%i\n',[i plan.numberOfProjections]);
+        fprintf(fid, 'leaf.count.%02i=%i\n', [i plan.numberOfProjections]);
     end
 end
 
@@ -668,7 +668,6 @@ clear i j fid sinogram;
 %% If using a remote server, copy plan files and execute gpusadose
 if exist('ssh2', 'var') && ~isempty(ssh2)
     
-    
     % Copy plan.header using scp_put
     if exist('Event', 'file') == 2
         Event('Secure copying file plan.header');
@@ -680,7 +679,7 @@ if exist('ssh2', 'var') && ~isempty(ssh2)
         Event('Secure copying file plan.img');
     end
     ssh2 = scp_put(ssh2, 'plan.img', remotefolder, folder);
-
+    
     % If using gpusadose
     if sadose == 0
         
@@ -689,7 +688,7 @@ if exist('ssh2', 'var') && ~isempty(ssh2)
             Event('Executing gpusadose on remote server');
         end
         ssh2 = ssh2_command(ssh2, ['cd ', remotefolder, ...
-            '; gpusadose -C dose.cfg']);
+            '; gpusadose -C dose.cfg &>out.txt']);
     
     % Otherwise, if using sadose
     else
@@ -699,14 +698,43 @@ if exist('ssh2', 'var') && ~isempty(ssh2)
             Event('Executing sadose on remote server');
         end
         ssh2 = ssh2_command(ssh2, ['cd ', remotefolder, ...
-            '; sadose -C dose.cfg']);
+            '; sadose -C dose.cfg &>out.txt']);
     end
     
-    % Retrieve dose image to the temporary directory on the local computer
-    if exist('Event', 'file') == 2
-        Event('Retrieving calculated dose image from remote direcory');
+    % Retrieve output to the temporary directory on the local computer
+    ssh2 = scp_get(ssh2, 'out.txt', folder, remotefolder);
+    
+    % Read in command output
+    cmdout = fileread(fullfile(folder, 'out.txt'));
+    
+    % Check if an error was encountered
+    if ~isempty(regexpi(cmdout, 'ERROR'))
+        
+        % Log execution output as error
+        if exist('Event', 'file') == 2
+            Event(cmdout, 'ERROR');
+        else
+            error(cmdout);
+        end
+        
+    % Otherwise, log output and retrieve image
+    else
+        
+        % Log output
+        if exist('Event', 'file') == 2
+            Event(cmdout);
+        end
+        
+        % Retrieve dose image to the temporary directory on the local 
+        % computer
+        if exist('Event', 'file') == 2
+            Event('Retrieving calculated dose image from remote direcory');
+        end
+        ssh2 = scp_get(ssh2, 'dose.img', folder, remotefolder);
     end
-    ssh2 = scp_get(ssh2, 'dose.img', folder, remotefolder);
+    
+    % Clear temporary variables
+    clear cmdout;
     
 %% Otherwise execute gpusadose locally
 else
@@ -760,72 +788,90 @@ else
 end
 
 %% Read in dose image
-if exist('Event', 'file') == 2
-    Event(['Reading dose.img from ', folder]);
-end
-
 % Open a read file handle to the dose image
 fid = fopen(fullfile(folder, 'dose.img'), 'r');
 
-% Read the dose image into tempdose
-tempdose = reshape(fread(fid, image.dimensions(1)/downsample * ...
-    image.dimensions(2)/downsample * image.dimensions(3), 'single', ...
-    0, 'l'), image.dimensions(1)/downsample, ...
-    image.dimensions(2)/downsample, image.dimensions(3));
+% If a valid file handle is returned
+if fid > 3
 
-% Close file handle
-fclose(fid);
-
-% Clear file handle
-clear fid;
-
-% Initialize dose.data array
-dose.data = zeros(image.dimensions);
-
-% Since the downsampling is only in the axial plane, loop through each 
-% IEC-Y slice
-if downsample > 1
-    
-    % Log interpolation stemp
+    % Log event
     if exist('Event', 'file') == 2
-        Event(sprintf(['Upsampling calculated dose image by %i using ', ...
-            'nearest neighbor interpolation'], downsample));
+        Event(['Reading dose.img from ', folder]);
+    end
+
+    % Read the dose image into tempdose
+    tempdose = reshape(fread(fid, image.dimensions(1)/downsample * ...
+        image.dimensions(2)/downsample * image.dimensions(3), 'single', ...
+        0, 'l'), image.dimensions(1)/downsample, ...
+        image.dimensions(2)/downsample, image.dimensions(3));
+
+    % Close file handle
+    fclose(fid);
+
+    % Clear file handle
+    clear fid;
+
+    % Initialize dose.data array
+    dose.data = zeros(image.dimensions);
+
+    % Since the downsampling is only in the axial plane, loop through each 
+    % IEC-Y slice
+    if downsample > 1
+
+        % Log interpolation stemp
+        if exist('Event', 'file') == 2
+            Event(sprintf(['Upsampling calculated dose image by %i using ', ...
+                'nearest neighbor interpolation'], downsample));
+        end
+
+        % Loop through each axial dose slice
+        for i = 1:image.dimensions(3)
+
+            % Upsample dataset back to CT resolution using nearest neighbor
+            % interpolation.  
+            dose.data(1:image.dimensions(1)-1, 1:image.dimensions(2)-1, i) = ...
+                interp2(tempdose(:,:,i), downsample - 1, 'nearest');
+        end
+
+        % Replicate last rows and columns (since they are not interpolated)
+        for i = 0:downsample-2
+            dose.data(image.dimensions(1) - i, :, :) = ...
+                dose.data(image.dimensions(1) - (downsample - 1), :, :);
+            dose.data(:, image.dimensions(2) - i, :) = ...
+                dose.data(:, image.dimensions(2) - (downsample - 1), :);
+        end
+    else
+        % If no downsampling occurred, simply copy tempdose
+        dose.data = tempdose;
+    end
+
+    % Clear temporary variables
+    clear i tempdose;
+
+    % Copy dose image start, width, and dimensions from CT image
+    dose.start = image.start;
+    dose.width = image.width;
+    dose.dimensions = image.dimensions;
+
+    % Log dose calculation completion
+    if exist('Event', 'file') == 2
+        Event(sprintf('Dose calculation completed in %0.3f seconds', toc));
     end
     
-    % Loop through each axial dose slice
-    for i = 1:image.dimensions(3)
-        
-        % Upsample dataset back to CT resolution using nearest neighbor
-        % interpolation.  
-        dose.data(1:image.dimensions(1)-1, 1:image.dimensions(2)-1, i) = ...
-            interp2(tempdose(:,:,i), downsample - 1, 'nearest');
-    end
-    
-    % Replicate last rows and columns (since they are not interpolated)
-    for i = 0:downsample-2
-        dose.data(image.dimensions(1) - i, :, :) = ...
-            dose.data(image.dimensions(1) - (downsample - 1), :, :);
-        dose.data(:, image.dimensions(2) - i, :) = ...
-            dose.data(:, image.dimensions(2) - (downsample - 1), :);
-    end
+% Otherwise, no dose was computed    
 else
-    % If no downsampling occurred, simply copy tempdose
-    dose.data = tempdose;
+    
+    % Log failure
+    if exist('Event', 'file') == 2
+        Event('CalcDose failed to compute dose', 'ERROR');
+    else
+        error('CalcDose failed to compute dose');
+    end
+    
+    % Return empty dose
+    dose = [];
 end
-
-% Clear temporary variables
-clear i tempdose;
-
-% Copy dose image start, width, and dimensions from CT image
-dose.start = image.start;
-dose.width = image.width;
-dose.dimensions = image.dimensions;
-
-% Log dose calculation completion
-if exist('Event', 'file') == 2
-    Event(sprintf('Dose calculation completed in %0.3f seconds', toc));
-end
-
+    
 % Catch errors, log, and rethrow
 catch err
     if exist('Event', 'file') == 2
@@ -834,4 +880,3 @@ catch err
         rethrow(err);
     end
 end
-    
