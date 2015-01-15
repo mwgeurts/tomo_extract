@@ -132,6 +132,11 @@ if ~exist('calcdose', 'var') || isempty(calcdose)
             
             % Determine path of current executable
             [path, ~, ~] = fileparts(mfilename('fullpath'));
+            
+            % Verify javalib path exists
+            if ~isdir(fullfile(path, 'ssh2_v2_m1_r6/'))
+                Event('Ganymed-SSH2 javalib path is missing', 'ERROR');
+            end
 
             % Load Ganymed-SSH2 javalib
             addpath(fullfile(path, 'ssh2_v2_m1_r6/')); 
