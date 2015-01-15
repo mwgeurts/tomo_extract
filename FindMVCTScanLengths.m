@@ -9,8 +9,8 @@ function scans = FindMVCTScanLengths(path, name)
 %
 % The following variable is returned upon succesful completion:
 %   scans: cell array of structures for each plan, with each structure
-%       containing the following fields: planUID, planName, scanUIDs, and
-%       scanLengths
+%       containing the following fields: planUID, planName, scanUIDs, date,
+%       time, and scanLengths
 %
 % Below is an example of how this function is used:
 %
@@ -248,11 +248,45 @@ for i = 1:nodeList.getLength
     subnode = subnodeList.item(0);
 
     % Store procedure UID
-    scans{plan}.scanUIDs{length(scans{plan}.scanUIDs)+1} = ...
-        char(subnode.getFirstChild.getNodeValue);
+    k = length(scans{plan}.scanUIDs)+1;
+    scans{plan}.scanUIDs{k} = char(subnode.getFirstChild.getNodeValue);
     
     % Initialize empty scan length
-    scans{plan}.scanLengths(length(scans{plan}.scanLengths)+1, :) = [0 0];
+    scans{plan}.scanLengths(k, :) = [0 0];
+    
+    % Search for scheduledStartDateTime date
+    subexpression = ...
+        xpath.compile('briefProcedure/scheduledStartDateTime/date');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If date was found, store result
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store procedure date
+        scans{plan}.date{k} = char(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for scheduledStartDateTime time
+    subexpression = ...
+        xpath.compile('briefProcedure/scheduledStartDateTime/time');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If date was found, store result
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store procedure date
+        scans{plan}.time{k} = char(subnode.getFirstChild.getNodeValue);
+    end
     
     % Search for scanList
     subexpression = ...
@@ -275,13 +309,13 @@ for i = 1:nodeList.getLength
         % If scan goes from 0 to 1, set start index
         if prev == 0 && str2double(...
                 subnodeList.item(j-1).getFirstChild.getNodeValue) == 1
-            startIndex = j-1;
+            start = j-1;
             prev = 1;
             
         % Otherwise, is scan goes from 1 to 0, set stop index and break
         elseif prev == 1 && str2double(...
                 subnodeList.item(j-1).getFirstChild.getNodeValue) == 0
-            stopIndex = j-1;
+            stop = j-1;
             break;
         end
     end
@@ -299,10 +333,10 @@ for i = 1:nodeList.getLength
     end
     
     % Update start and stop scan lengths
-    scans{plan}.scanLengths(length(scans{plan}.scanLengths), 1) = ...
-        str2double(subnodeList.item(startIndex).getFirstChild.getNodeValue);
-    scans{plan}.scanLengths(length(scans{plan}.scanLengths), 2) = ...
-        str2double(subnodeList.item(stopIndex).getFirstChild.getNodeValue);
+    scans{plan}.scanLengths(k, 1) = ...
+        str2double(subnodeList.item(start).getFirstChild.getNodeValue);
+    scans{plan}.scanLengths(k, 2) = ...
+        str2double(subnodeList.item(stop).getFirstChild.getNodeValue);
 end
 
 % Log completion of search
@@ -311,8 +345,8 @@ if exist('Event', 'file') == 2
 end
 
 % Clear temporary variables
-clear doc factory xpath i node subnode nodeList subnodeList expression ...
-    subexpression j parent plan prev startIndex stopIndex;
+clear doc factory xpath i j k node subnode nodeList subnodeList expression ...
+    subexpression parent plan prev start stop;
 
 % Catch errors, log, and rethrow
 catch err  
