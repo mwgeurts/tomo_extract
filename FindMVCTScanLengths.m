@@ -251,8 +251,10 @@ for i = 1:nodeList.getLength
     k = length(scans{plan}.scanUIDs)+1;
     scans{plan}.scanUIDs{k} = char(subnode.getFirstChild.getNodeValue);
     
-    % Initialize empty scan length
+        % Initialize empty scan length and date/time
     scans{plan}.scanLengths(k, :) = [0 0];
+    scans{plan}.date{k} = '';
+    scans{plan}.time{k} = '';
     
     % Search for scheduledStartDateTime date
     subexpression = ...
