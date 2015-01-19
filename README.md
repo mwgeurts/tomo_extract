@@ -18,6 +18,8 @@ TomoTherapy is a registered trademark of Accuray Incorporated.
   * [LoadStructures](README.md#loadstructures)
   * [LoadPlan](README.md#loadplan)
   * [LoadPlanDose](README.md#loadplandose)
+  * [LoadDailyQA](README.md#loaddailyqa)
+  * [LoadStaticCouchQA](README.md#loadstaticcouchqa)
   * [FindIVDT](README.md#findivdt)
   * [FindMVCTScanLengths](README.md#findmvctscanlengths)
   * [CalcDose](README.md#calcdose)
@@ -136,6 +138,72 @@ path = '/path/to/archive/';
 name = 'Anon_0001_patient.xml';
 planUID = '1.2.826.0.1.3680043.2.200.1688035198.217.40463.657';
 dose = LoadPlanDose(path, name, planUID);
+```
+
+### LoadDailyQA
+
+`LoadDailyQA()` parses a TomoTherapy Transit Dose DICOM RT object or patient archive XML file for procedure return data and derives various calibration parameters.  See below for more details on the parameters returned.
+
+The following variables are required for proper execution:
+
+* name: name of the DICOM RT file or patient archive XML file
+* path: path to the DICOM RT file or patient archive XML file
+* numberOfProjections: number of projections in the daily QA procedure
+* openRows: number of detector channels included in the DICOM file
+* mvctRows: the number of active MVCT data channels
+* shiftGold: boolean, set to 1 to auto-shift gold standard data to measured profile when computing channelCal
+
+The following structure fields are returned upon succesful completion:
+
+* dailyqa.rawData: an array of raw MVCT detector channel data
+* dailyqa.background: a double representing the mean background signal on the MVCT detector when the MLC leaves are closed
+* dailyqa.leafMap: an array of MVCT detector channel to MLC leaf mappings.  Each channel represents the maximum signal for that leaf
+* dailyqa.leafSpread: array of relative response for an MVCT channel for an open leaf (according to leafMap) to neighboring MLC leaves
+* dailyqa.channelGold: array of the "expected" MLC response given the TomoTherapy treatment system gold standard beam model
+* dailyqa.channelCal: array containing the relative response of each detector channel in an open field given KEEP_OPEN_FIELD_CHANNELS
+* dailyqa.evenLeaves: array containing the MVCT detector response when all even MLC leaves are open, used to generate leafMap
+* dailyqa.oddLeaves: array containing the MVCT detector response when all odd MLC leaves are open, used to generate leafMap
+* dailyqa.returnQAData: substructure of daily QA procedure return data parsed by this function, with details on each procedure
+* dailyqa.returnQADataList: a string cell array for formatted return data (for populating a menu() call)
+
+Below is an example of how this function is used:
+
+```matlab
+path = '/path/to/archive/';
+name = 'Daily_QA_patient.xml';
+dailyqa = LoadDailyQA(path, name, 9000, 531, 528, 0); 
+```
+
+### LoadStaticCouchQA
+
+`LoadStaticCouchQA()` searches a TomoTherapy machine archive (given by the name and path input variables) for static couch QA procedures. If more than one is found, it prompts the user to select one to load (using listdlg call) and reads the exit detector data into the return variable detdata. The parent plan UID is returned in the variable planUID.
+
+The following variables are required for proper execution:
+
+* name: name of the DICOM RT file or patient archive XML file
+* path: path to the DICOM RT file or patient archive XML file
+* leftTrim: the channel in the exit detector data that corresponds to the first channel in the channelCalibration array
+* channelCal: array containing the relative response of each detector channel in an open field given KEEP_OPEN_FIELD_CHANNELS, created by `LoadDailyQA()`
+* detectorRows: number of detector channels included in the DICOM file
+
+The following variables are returned upon succesful completion:
+
+* planUID: UID of the plan if parsed from the patient XML, otherwise 'UNKNOWN' if parsed from a transit dose DICOM file
+* detdata: n x detectorRows of uncorrected exit detector data for a delivered static couch DQA plan, where n is the number of projections in the plan
+
+Below is an example of how this function is used:
+
+```matlab
+% Load Daily QA data (channel calibration)
+path = '/path/to/archive/';
+name = 'Daily_QA_patient.xml';
+dailyqa = LoadDailyQA(path, name, 9000, 531, 528, 0); 
+ 
+% Load Static Couch QA data
+path = '/path/to/archive/';
+name = 'Static_Couch_QA_patient.xml';
+[planUID, detdata] = LoadStaticCouchQA(path, name, 27, ...
+    dailyqa.channelCal, 643); 
 ```
 
 ### FindIVDT
