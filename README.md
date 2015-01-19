@@ -17,6 +17,7 @@ TomoTherapy is a registered trademark of Accuray Incorporated.
   * [LoadImage](README.md#loadimage)
   * [LoadStructures](README.md#loadstructures)
   * [LoadPlan](README.md#loadplan)
+  * [LoadPlanDose](README.md#loadplandose)
   * [FindIVDT](README.md#findivdt)
   * [FindMVCTScanLengths](README.md#findmvctscanlengths)
   * [CalcDose](README.md#calcdose)
@@ -92,14 +93,16 @@ structures = LoadStructures(path, name, image, atlas);
 
 ### LoadPlan
 
-`LoadPlan()` loads the delivery plan from a specified TomoTherapy patient  archive and plan trial UID.  This data can be used to perform dose calculation via `CalcDose()`.
+`LoadPlan()` loads the delivery plan from a specified TomoTherapy patient archive and plan trial UID.  This data can be used to perform dose calculation via `CalcDose()`.
 
 The following variables are required for proper execution: 
+
 * path: path to the patient archive XML file
 * name: name of patient XML file in path
 * planUID: UID of the plan
 
 The following variables are returned upon succesful completion:
+
 * planData: delivery plan data including scale, tau, lower leaf index, number of projections, number of leaves, sync/unsync actions, leaf sinogram, isocenter, and planTrialUID
 
 Below is an example of how this function is used:
@@ -109,6 +112,29 @@ path = '/path/to/archive/';
 name = 'Anon_0001_patient.xml';
 planUID = '1.2.826.0.1.3680043.2.200.1688035198.217.40463.657';
 plan = LoadPlan(path, name, planUID);
+```
+
+### LoadPlanDose
+
+`LoadPlanDose()` loads the optimized dose after EOP (ie, Final Dose) for a given reference plan UID and TomoTherapy patient archive.  The dose is returned as a structure.
+
+The following variables are required for proper execution: 
+
+* path: path to the patient archive XML file
+* name: name of patient XML file in path
+* planUID: UID of plan to extract dose image
+
+The following variables are returned upon succesful completion:
+
+* dose: structure containing the associated plan dose (After EOP) array, start coordinates, width, dimensions, and frame of reference
+
+Below is an example of how this function is used:
+
+```matlab
+path = '/path/to/archive/';
+name = 'Anon_0001_patient.xml';
+planUID = '1.2.826.0.1.3680043.2.200.1688035198.217.40463.657';
+dose = LoadPlanDose(path, name, planUID);
 ```
 
 ### FindIVDT
