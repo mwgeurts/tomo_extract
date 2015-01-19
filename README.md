@@ -21,6 +21,7 @@ TomoTherapy is a registered trademark of Accuray Incorporated.
   * [FindIVDT](README.md#findivdt)
   * [FindMVCTScanLengths](README.md#findmvctscanlengths)
   * [CalcDose](README.md#calcdose)
+  * [ParseDetData](README.md#parsedetdata)
 * [Event Calling](README.md#event-calling)
 * [Third Party Statements](README.md#third-party-statements)
 
@@ -224,6 +225,34 @@ dose = CalcDose(modplan);
 
 % Calculate dose again, but using sadose rather than gpusadose
 dose = CalcDose(image, modplan, modelfolder, 1);
+```
+
+### ParseDetData
+
+`ParseDetData()` is a function that exctracts the dose1, dose2, and detector data from a compressed TomoTherapy Detector Data file (detdata.dat). This function will display a progress bar while it loads (unless MATLAB was executed with the -nodisplay, -nodesktop, or -noFigureWindows flags). The following terminal commands are used to download the detector data file from the DRS following delivery:
+
+```
+ftp drs
+bin
+cd /sd0a
+get detData.dat
+quit
+```
+
+The following variables are required for proper execution: 
+
+* filename: string containing the path and filename to the detector data
+
+The following variables are returned upon succesful completion:
+
+* data: structure containing timedate, views, dose1, dose2, cone, and detdata fields. dose1, dose2, and cone are vectors (views x 1), while detdata is an array (views x 640)
+
+Below is an example of how this function is used:
+
+```matlab
+data = ParseDetData('./Treat_3_J48_detData.dat');
+figure;
+imagesc(data.detdata);
 ```
 
 ## Event Calling
