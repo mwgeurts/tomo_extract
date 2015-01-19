@@ -282,8 +282,14 @@ if size(returnDQAData,2) == 0
         if isfield(exitInfo,'Private_300d_2026') == 0
             
             % Prompt user for the number of projections in the procedure
-            x = inputdlg(['Trim Values not found.  Enter the total ', ...
-                'number of projections delivered:'], 'Transit DQA', [1 50]);
+            if usejava('jvm') && feature('ShowFigureWindows')
+                x = inputdlg(['Trim values not found.  Enter the total ', ...
+                    'number of projections delivered:'], 'Trim Values', ...
+                    [1 50]);
+            else
+                x = input(['Trim values not found.  Enter the total ', ...
+                    'number of projections delivered:'], 's');
+            end
             
             % Set Private_300d_2026 StopTrim tag to the number of 
             % projections (note, this assumes the procedure was stopped 
