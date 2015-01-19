@@ -22,6 +22,7 @@ TomoTherapy is a registered trademark of Accuray Incorporated.
   * [LoadStaticCouchQA](README.md#loadstaticcouchqa)
   * [FindIVDT](README.md#findivdt)
   * [FindMVCTScanLengths](README.md#findmvctscanlengths)
+  * [FindPlans](README.md#findplans)
   * [CalcDose](README.md#calcdose)
   * [ParseDetData](README.md#parsedetdata)
 * [Event Calling](README.md#event-calling)
@@ -247,6 +248,27 @@ Below is an example of how this function is used:
 path = '/path/to/archive/';
 name = 'Anon_0001_patient.xml';
 scans = FindMVCTScanLengths(path, name);
+```
+
+### FindPlans
+
+`FindPlans()` loads all delivery plan trial UIDs from a specified TomoTherapy patient archive. Only approved Helical, non-DQA plans are returned. 
+
+The following variables are required for proper execution: 
+
+* path: path to the patient archive XML file
+* name: name of patient XML file in path
+
+The following variable is returned upon succesful completion:
+
+* plans: cell array of approved plan UIDs
+
+Below is an example of how this function is used:
+
+```matlab
+path = '/path/to/archive/';
+name = 'Anon_0001_patient.xml';
+plans = FindPlans(path, name);
 ```
 
 ### CalcDose
