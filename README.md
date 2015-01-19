@@ -176,7 +176,7 @@ dailyqa = LoadDailyQA(path, name, 9000, 531, 528, 0);
 
 ### LoadStaticCouchQA
 
-`LoadStaticCouchQA()` searches a TomoTherapy machine archive (given by the name and path input variables) for static couch QA procedures. If more than one is found, it prompts the user to select one to load (using listdlg call) and reads the exit detector data into the return variable detdata. The parent plan UID is returned in the variable planUID.
+`LoadStaticCouchQA()` searches a TomoTherapy machine archive (given by the name and path input variables) for static couch QA procedures. If more than one is found, it prompts the user to select one to load (using listdlg call) and reads the exit detector data into the return variable detdata. If no static couch QA procedures are found, the user is prompted to select a DICOM RT transit dose file.
 
 The following variables are required for proper execution:
 

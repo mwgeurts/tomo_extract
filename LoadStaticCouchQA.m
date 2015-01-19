@@ -4,7 +4,8 @@ function [planUID, detdata] = LoadStaticCouchQA(path, name, leftTrim, ...
 % name and path input variables) for static couch QA procedures. If more 
 % than one is found, it prompts the user to select one to load (using 
 % listdlg call) and reads the exit detector data into the return variable 
-% detdata. The parent plan UID is returned in the variable planUID.
+% detdata. If no static couch QA procedures are found, the user is prompted
+% to select a DICOM RT transit dose file.
 %
 % The following variables are required for proper execution:
 %   name: name of the DICOM RT file or patient archive XML file
@@ -225,16 +226,27 @@ returnDQAData = returnDQAData(~cellfun('isempty', returnDQAData));
 returnDQADataList = ...
     returnDQADataList(~cellfun('isempty', returnDQADataList));
 
-%% If not static couch QA data was found
+%% If no static couch QA data was found
 if size(returnDQAData,2) == 0
-    % Request the user to select the DQA exit detector DICOM
-    if exist('Event', 'file') == 2
-        Event(['No static couch data was found in patient archive. ', ...
-            'Requesting user to select DICOM file.'], 'WARN');
+    
+    % If a valid screen size is returned (MATLAB was run without -nodisplay)
+    if usejava('jvm') && feature('ShowFigureWindows')
+        
+        % Log event
+        if exist('Event', 'file') == 2
+            Event(['No static couch data was found in patient archive. ', ...
+                'Requesting user to select DICOM file.'], 'WARN');
+        end
+        
+        % Request the user to select the DQA exit detector DICOM
+        [name, path] = uigetfile({'*.dcm', 'Transit Dose File (*.dcm)'}, ...
+            'Select the Static-Couch DQA File', path);
+    
+    % Otherwise, throw an error
+    else
+        error('No static couch data was found in patient archive.');
     end
-    [name, path] = uigetfile({'*.dcm', 'Transit Dose File (*.dcm)'}, ...
-        'Select the Static-Couch DQA File', path);
-
+    
     % If the user selected a file
     if ~isequal(name, 0)
         
