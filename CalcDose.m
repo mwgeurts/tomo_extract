@@ -797,7 +797,7 @@ end
 fid = fopen(fullfile(folder, 'dose.img'), 'r');
 
 % If a valid file handle is returned
-if fid > 3
+if fid >= 3
 
     % Log event
     if exist('Event', 'file') == 2
