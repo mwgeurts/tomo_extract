@@ -23,6 +23,7 @@ function ivdt = FindIVDT(path, id, type)
 %   id = '1.2.826.0.1.3680043.2.200.1693609359.434.30969.2213';
 %   ivdt = FindIVDT(path, id, 'TomoPlan');
 %
+% Author: Mark Geurts, mark.w.geurts@gmail.com
 % Copyright (C) 2015 University of Wisconsin Board of Regents
 %
 % This program is free software: you can redistribute it and/or modify it 

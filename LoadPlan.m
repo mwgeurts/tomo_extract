@@ -21,6 +21,7 @@ function planData = LoadPlan(path, name, planUID)
 %   planUID = '1.2.826.0.1.3680043.2.200.1688035198.217.40463.657';
 %   plan = LoadPlan(path, name, planUID);
 %
+% Author: Mark Geurts, mark.w.geurts@gmail.com
 % Copyright (C) 2015 University of Wisconsin Board of Regents
 %
 % This program is free software: you can redistribute it and/or modify it 

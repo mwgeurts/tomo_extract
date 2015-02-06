@@ -73,6 +73,7 @@ function dose = CalcDose(varargin)
 %   % Calculate dose again, but using sadose rather than gpusadose
 %   dose = CalcDose(image, modplan, modelfolder, 1);
 %
+% Author: Mark Geurts, mark.w.geurts@gmail.com
 % Copyright (C) 2015 University of Wisconsin Board of Regents
 %
 % This program is free software: you can redistribute it and/or modify it 
