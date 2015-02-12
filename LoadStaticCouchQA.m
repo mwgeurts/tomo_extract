@@ -1,5 +1,5 @@
-function [planUID, detdata] = LoadStaticCouchQA(path, name, leftTrim, ...
-    channelCal, detectorRows)
+function [machine, planUID, detdata] = LoadStaticCouchQA(path, name, ...
+    leftTrim, channelCal, detectorRows)
 % LoadStaticCouchQA searches a TomoTherapy machine archive (given by the 
 % name and path input variables) for static couch QA procedures. If more 
 % than one is found, it prompts the user to select one to load (using 
@@ -18,6 +18,7 @@ function [planUID, detdata] = LoadStaticCouchQA(path, name, leftTrim, ...
 %   detectorRows: number of detector channels included in the DICOM file
 %
 % The following variables are returned upon succesful completion:
+%   machine: string containing delivered machine name
 %   planUID: UID of the plan if parsed from the patient XML, otherwise
 %       'UNKNOWN' if parsed from a transit dose DICOM file
 %   detdata: n x detectorRows of uncorrected exit detector data for a 
@@ -34,7 +35,7 @@ function [planUID, detdata] = LoadStaticCouchQA(path, name, leftTrim, ...
 %   % Load Static Couch QA data
 %   path = '/path/to/archive/';
 %   name = 'Static_Couch_QA_patient.xml';
-%   [planUID, detdata] = LoadStaticCouchQA(path, name, 27, ...
+%   [machine, planUID, detdata] = LoadStaticCouchQA(path, name, 27, ...
 %       dailyqa.channelCal, 643); 
 %
 % Author: Mark Geurts, mark.w.geurts@gmail.com
@@ -163,9 +164,21 @@ for i = 1:nodeList.getLength
     % Store the returndata time
     returnDQAData{i}.time = char(subnode.getFirstChild.getNodeValue);
 
+    % Search for delivered machine name
+    subexpression = ...
+        xpath.compile('procedure/scheduledProcedure/deliveredMachineName');
+
+    % Retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+    subnode = subnodeList.item(0);
+
+    % Store the machine name
+    returnDQAData{i}.machine = char(subnode.getFirstChild.getNodeValue);
+    
     % Add an entry to the returnDQADataList using the format
-    % "date-time | description"
-    returnDQADataList{i} = sprintf('%s-%s   |   %s', returnDQAData{i}.date, ...
+    % "macine | date-time | description"
+    returnDQADataList{i} = sprintf('%s | %s-%s | %s', ...
+        returnDQAData{i}.machine, returnDQAData{i}.date, ...
         returnDQAData{i}.time, returnDQAData{i}.description);
 
     % Search for delivery plan XML object uid
@@ -266,6 +279,12 @@ if size(returnDQAData,2) == 0
         end
         exitInfo = dicominfo(fullfile(path, name));
 
+        % Store the machine name
+        machine = exitInfo.StationName;
+        
+        % Set plan UID to UNKNOWN, informing the tool must auto-select
+        planUID = 'UNKNOWN';
+        
         % Open read handle to DICOM file (dicomread can't handle RT 
         % RECORDS) 
         if exist('Event', 'file') == 2
@@ -375,9 +394,6 @@ if size(returnDQAData,2) == 0
         % Clear all temporary variables
         clear fid arr rightTrim startTrim stopTrim exitInfo;
     
-        % Set plan UID to UNKNOWN, informing the tool must auto-select
-        planUID = 'UNKNOWN';
-
         % Log event
         if exist('Event', 'file') == 2
             Event(['Static Couch QA successfully parsed from ', name]);
@@ -444,6 +460,9 @@ else
         % Clear temporary variables
         clear ok;
     end
+    
+    % Store machine from selected plan
+    machine = returnDQAData{plan}.machine;
     
     %% Load parent plan information
     if exist('Event', 'file') == 2

@@ -189,6 +189,7 @@ The following variables are required for proper execution:
 
 The following variables are returned upon succesful completion:
 
+* machine: string containing delivered machine name
 * planUID: UID of the plan if parsed from the patient XML, otherwise 'UNKNOWN' if parsed from a transit dose DICOM file
 * detdata: n x detectorRows of uncorrected exit detector data for a delivered static couch DQA plan, where n is the number of projections in the plan
 
@@ -203,7 +204,7 @@ dailyqa = LoadDailyQA(path, name, 9000, 531, 528, 0);
 % Load Static Couch QA data
 path = '/path/to/archive/';
 name = 'Static_Couch_QA_patient.xml';
-[planUID, detdata] = LoadStaticCouchQA(path, name, 27, ...
+[machine, planUID, detdata] = LoadStaticCouchQA(path, name, 27, ...
     dailyqa.channelCal, 643); 
 ```
 
