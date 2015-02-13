@@ -260,7 +260,7 @@ if isempty(s)
     dailyqa.rawData = arr(1:rows, 1:numberOfProjections);
     if exist('Event', 'file') == 2
         Event(sprintf(['%i projections successfully loaded across %i ', ...
-            channels'], numberOfProjections, rows));
+            'channels'], numberOfProjections, rows));
     end
 
     % Close file handle
