@@ -25,6 +25,7 @@ TomoTherapy is a registered trademark of Accuray Incorporated.
   * [FindPlans](README.md#findplans)
   * [CalcDose](README.md#calcdose)
   * [ParseDetData](README.md#parsedetdata)
+  * [IndexLibrary](README.md#indexlibrary)
 * [Event Calling](README.md#event-calling)
 * [Third Party Statements](README.md#third-party-statements)
 
@@ -341,9 +342,40 @@ The following variables are returned upon succesful completion:
 Below is an example of how this function is used:
 
 ```matlab
+% Parse detector data
 data = ParseDetData('./Treat_3_J48_detData.dat');
+
+% Plot the detector data
 figure;
 imagesc(data.detdata);
+```
+
+### IndexLibrary
+
+IndexLibrary scans an given directory for patient archives, storing a summary of results in the file PatientLibraryIndex.xml within the same directory.  When called again, it will re-index the directory, generating a new index file.  A DOM node of the library contents is also optionally returned.
+
+The library documents the following attributes for each approved plan: approved plan trial UID, plan label, timestamp, study UID, plan UID, and archive path.
+
+The following variables are required for proper execution: 
+
+* version: string containing theversion of the parent application, This version will be saved to the index file
+* directory: string containing the location of the patient directory
+
+The following variables are returned upon succesful completion:
+
+* docNode (optional): Document Object Model node containing the library
+
+Below is an example of how this function is used:
+
+```
+% Create new library index file
+IndexLibrary('1.0', 'path/to/patient/archives');
+
+% Read the resulting index as a DOM node
+docNode = xmlread('PatientLibraryIndex.xml');
+
+% Update library index, this time returning DOM node
+docNode = IndexLibrary('1.0', 'path/to/patient/archives');
 ```
 
 ## Event Calling
