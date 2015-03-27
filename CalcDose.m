@@ -14,7 +14,8 @@ function dose = CalcDose(varargin)
 % server DNS name (or IP address), while the second and third are the
 % username and password, respectively.  This user account must have SSH 
 % access rights, rights to execute sadose/gpusadose, and finally read/write 
-% access to the temp directory.
+% access to the temp directory. Note, this function assumes that the remote
+% computation server is unix-based.
 %
 %   ssh2 = ssh2_config('tomo-research', 'tomo', 'hi-art');
 %
@@ -96,11 +97,22 @@ persistent calcdose folder remotefolder modelfolder image sadose ssh2;
 % If dose calculation capability has not yet been determined 
 if ~exist('calcdose', 'var') || isempty(calcdose)
     
-    % Check for gpusadose locally
-    [~, cmdout] = system('which gpusadose');
+    % If the local system is unix-based
+    if isunix
+    
+        % Check for gpusadose locally
+        [status, cmdout] = system('which gpusadose');
 
+    % Otherwise, if Windows
+    elseif ispc
+        
+        % Execute where command (will only work on Windows Server 2003 and
+        % later systems)
+        [status, cmdout] = system('where gpusadose.exe');
+    end
+        
     % If gpusadose exists
-    if ~strcmp(cmdout,'')
+    if status == 0 && ~strcmp(cmdout,'')
 
         % Log gpusadose version
         [~, str] = system('gpusadose -V');
@@ -114,6 +126,8 @@ if ~exist('calcdose', 'var') || isempty(calcdose)
 
         % Clear temporary variables
         clear str cellarr;
+        
+    % Otherwise local dose calculation does not exist
     else
 
         % Warn the user that gpusadose was not found
@@ -167,6 +181,9 @@ if ~exist('calcdose', 'var') || isempty(calcdose)
             % Set calcdose variable
             calcdose = 1;
 
+            % Clear temporary variables
+            clear path;
+            
         % addpath, ssh2_config, or ssh2_command may all fail if ganymed is
         % not available or if the remote server is not responding
         catch err
@@ -185,7 +202,7 @@ if ~exist('calcdose', 'var') || isempty(calcdose)
     end
 
     % Clear temporary variables
-    clear cmdout path;
+    clear status cmdout;
 end
 
 % If no inputs provided, return calcdose flag
@@ -475,9 +492,18 @@ if nargin >= 2
     % As these files do not change between patients (for the same machine),
     % they are not read from the patient XML but rather stored in the
     % directory stored in modelfolder.
-    [status, cmdout] = ...
-        system(['cp ',fullfile(modelfolder, '*.*'),' ', folder, '/']);
+    
+    % If the local system is unix-based
+    if isunix
+        [status, cmdout] = system(['cp "',fullfile(modelfolder, '*.*'), ...
+            '" "', folder, '/"']);
 
+    % Otherwise, if Windows
+    elseif ispc
+        [status, cmdout] = system(['copy "',fullfile(modelfolder, '*.*'), ...
+            '" "', folder, '\"']);
+    end
+    
     % If status is 0, cp was successful.  Otherwise, log error
     if status > 0
         if exist('Event', 'file') == 2
@@ -744,31 +770,54 @@ if exist('ssh2', 'var') && ~isempty(ssh2)
     
 %% Otherwise execute gpusadose locally
 else
+    
     % If using gpusadose
     if sadose == 0
+
+        % If the system is unix-based
+        if isunix
+            
+            % cd to temporary folder, then call gpusadose
+            if exist('Event', 'file') == 2
+                Event(['Executing gpusadose -C "', folder,'/dose.cfg"']);
+            end
+            [status, cmdout] = ...
+                system(['cd "', folder, '"; gpusadose -C ./dose.cfg']);
         
-        % First, initialize and clear GPU memory
-        if exist('Event', 'file') == 2
-            Event('Clearing GPU memory');
+        % Otherwise, if Windows
+        elseif ispc
+            
+            % cd to temporary folder, then call gpusadose
+            if exist('Event', 'file') == 2
+                Event(['Executing gpusadose.exe -C "', folder,'\dose.cfg"']);
+            end
+            [status, cmdout] = ...
+                system(['cd "', folder, '"; gpusadose.exe -C .\dose.cfg']);
         end
-        gpuDevice(1);
-
-        % cd to temporary folder, then call gpusadose
-        if exist('Event', 'file') == 2
-            Event(['Executing gpusadose -C ', folder,'/dose.cfg']);
-        end
-        [status, cmdout] = ...
-            system(['cd ', folder, '; gpusadose -C ./dose.cfg']);
-
+        
     % Otherwise, if using sadose
     else
         
-        % cd to temporary folder, then call sadose
-        if exist('Event', 'file') == 2
-            Event(['Executing sadose -C ', folder,'/dose.cfg']);
+        % If the system is unix-based
+        if isunix
+            
+            % cd to temporary folder, then call gpusadose
+            if exist('Event', 'file') == 2
+                Event(['Executing sadose -C "', folder,'/dose.cfg"']);
+            end
+            [status, cmdout] = ...
+                system(['cd "', folder, '"; sadose -C ./dose.cfg']);
+        
+        % Otherwise, if Windows
+        elseif ispc
+            
+            % cd to temporary folder, then call gpusadose
+            if exist('Event', 'file') == 2
+                Event(['Executing sadose.exe -C "', folder,'\dose.cfg"']);
+            end
+            [status, cmdout] = ...
+                system(['cd "', folder, '"; sadose.exe -C .\dose.cfg']);
         end
-        [status, cmdout] = ...
-            system(['cd ', folder, '; sadose -C ./dose.cfg']);
         
     end
     
