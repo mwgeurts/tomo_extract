@@ -71,7 +71,7 @@ expression = ...
     xpath.compile('//fullPlanDataArray/fullPlanDataArray/plan/briefPlan');
 
 % Retrieve the results
-nodeList = expression.evaluate(doc, XpathConstants.NODESET);
+nodeList = expression.evaluate(doc, XPathConstants.NODESET);
 
 % Preallocate cell array
 plans = cell(1, nodeList.getLength);
@@ -91,7 +91,7 @@ for i = 1:nodeList.getLength
     subexpression = xpath.compile('approvedPlanTrialUID');
 
     % Evaluate xpath expression and retrieve the results
-    subnodeList = subexpression.evaluate(node, XpathConstants.NODESET);
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
     % If no approved plan trial UID was found, continue to next result
     if subnodeList.getLength == 0
@@ -113,7 +113,7 @@ for i = 1:nodeList.getLength
         subexpression = xpath.compile('planDeliveryType');
 
         % Evaluate xpath expression and retrieve the results
-        subnodeList = subexpression.evaluate(node, XpathConstants.NODESET);
+        subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
         % If plan delivery type was found, continue to next result
         if subnodeList.getLength == 0
@@ -134,7 +134,7 @@ for i = 1:nodeList.getLength
     subexpression = xpath.compile('typeOfPlan');
 
     % Evaluate xpath expression and retrieve the results
-    subnodeList = subexpression.evaluate(node, XpathConstants.NODESET);
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
     % If plan type was found, continue to next result
     if subnodeList.getLength == 0
@@ -153,7 +153,7 @@ for i = 1:nodeList.getLength
     subexpression = xpath.compile('dbInfo/databaseUID');
 
     % Evaluate xpath expression and retrieve the results
-    subnodeList = subexpression.evaluate(node, XpathConstants.NODESET);
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
     % If no database UID was found, continue to next result
     if subnodeList.getLength == 0
