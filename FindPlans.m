@@ -1,12 +1,13 @@
-function plans = FindPlans(path, name)
+function plans = FindPlans(varargin)
 % FindPlans loads all delivery plan trial UIDs from a specified TomoTherapy 
-% patient archive. Only approved Helical, non-DQA plans are returned. This 
-% function has currently been validated for version 4.X and 5.X patient 
-% archives.
+% patient archive. Only approved, non-DQA plans are returned. This function
+% has currently been validated for version 4.X and 5.X patient archives.
 %
 % The following variables are required for proper execution: 
-%   path: path to the patient archive XML file
-%   name: name of patient XML file in path
+%   varargin{1}: path to the patient archive XML file
+%   varargin{2}: name of patient XML file in path
+%   varargin{3} (optional): type of plan to load ('Helical'). If left out,
+%       all plan types are returned.
 %
 % The following variable is returned upon succesful completion:
 %   plans: cell array of approved plan UIDs
@@ -16,6 +17,9 @@ function plans = FindPlans(path, name)
 %   path = '/path/to/archive/';
 %   name = 'Anon_0001_patient.xml';
 %   plans = FindPlans(path, name);
+%
+%   % This time only retrieve Helical plans
+%   helical = FindPlans(path, name, 'Helical');
 %
 % Author: Mark Geurts, mark.w.geurts@gmail.com
 % Copyright (C) 2015 University of Wisconsin Board of Regents
@@ -35,11 +39,16 @@ function plans = FindPlans(path, name)
 
 % Execute in try/catch statement
 try  
-   
+
 % Log start of matching and start timer
 if exist('Event', 'file') == 2
-    Event(sprintf('Searching %s for approved plans', name));
+    Event(sprintf('Searching %s for approved plans', varargin{2}));
     tic;
+end
+
+% If a third argument was provided
+if nargin == 3 && exist('Event', 'file') == 2
+    Event(sprintf('Plan types restricted to %s', varargin{3}));
 end
 
 % The patient XML is parsed using xpath class
@@ -49,20 +58,20 @@ import javax.xml.xpath.*
 if exist('Event', 'file') == 2
     Event('Loading file contents data using xmlread');
 end
-doc = xmlread(fullfile(path, name));
+doc = xmlread(fullfile(varargin{1}, varargin{2}));
 
 % Initialize a new xpath instance to the variable factory
-factory = XPathFactory.newInstance;
+factory = XpathFactory.newInstance;
 
 % Initialize a new xpath to the variable xpath
-xpath = factory.newXPath;
+xpath = factory.newXpath;
 
 % Declare a new xpath search expression.  Search for all fullPlanDataArrays
 expression = ...
     xpath.compile('//fullPlanDataArray/fullPlanDataArray/plan/briefPlan');
 
 % Retrieve the results
-nodeList = expression.evaluate(doc, XPathConstants.NODESET);
+nodeList = expression.evaluate(doc, XpathConstants.NODESET);
 
 % Preallocate cell array
 plans = cell(1, nodeList.getLength);
@@ -82,7 +91,7 @@ for i = 1:nodeList.getLength
     subexpression = xpath.compile('approvedPlanTrialUID');
 
     % Evaluate xpath expression and retrieve the results
-    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+    subnodeList = subexpression.evaluate(node, XpathConstants.NODESET);
 
     % If no approved plan trial UID was found, continue to next result
     if subnodeList.getLength == 0
@@ -97,30 +106,35 @@ for i = 1:nodeList.getLength
         continue
     end
     
-    % Search for plan delivery type
-    subexpression = xpath.compile('planDeliveryType');
+    % If a third argument was provided
+    if nargin == 3
+   
+        % Search for plan delivery type
+        subexpression = xpath.compile('planDeliveryType');
 
-    % Evaluate xpath expression and retrieve the results
-    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+        % Evaluate xpath expression and retrieve the results
+        subnodeList = subexpression.evaluate(node, XpathConstants.NODESET);
 
-    % If plan delivery type was found, continue to next result
-    if subnodeList.getLength == 0
-        continue
-    end
-    
-    % Retrieve a handle to the results
-    subnode = subnodeList.item(0);
-    
-    % Otherwise, if approved plan delivery type is not Helical, continue
-    if ~strcmp(char(subnode.getFirstChild.getNodeValue), 'Helical')
-        continue
+        % If plan delivery type was found, continue to next result
+        if subnodeList.getLength == 0
+            continue
+        end
+
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Otherwise, if approved plan delivery type is not equal to the 
+        % provided type, continue
+        if ~strcmp(char(subnode.getFirstChild.getNodeValue), varargin{3})
+            continue
+        end
     end
     
     % Search for plan type
     subexpression = xpath.compile('typeOfPlan');
 
     % Evaluate xpath expression and retrieve the results
-    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+    subnodeList = subexpression.evaluate(node, XpathConstants.NODESET);
 
     % If plan type was found, continue to next result
     if subnodeList.getLength == 0
@@ -139,7 +153,7 @@ for i = 1:nodeList.getLength
     subexpression = xpath.compile('dbInfo/databaseUID');
 
     % Evaluate xpath expression and retrieve the results
-    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+    subnodeList = subexpression.evaluate(node, XpathConstants.NODESET);
 
     % If no database UID was found, continue to next result
     if subnodeList.getLength == 0
@@ -165,7 +179,7 @@ if size(plans, 2) == 0
     
     % Throw a warning
     if exist('Event', 'file') == 2
-        Event(sprintf('No approved plans found in %s', name), 'WARN'); 
+        Event(sprintf('No approved plans found in %s', varargin{2}), 'WARN'); 
     end
     
 % Otherwise the execution was successful
