@@ -61,10 +61,10 @@ end
 doc = xmlread(fullfile(varargin{1}, varargin{2}));
 
 % Initialize a new xpath instance to the variable factory
-factory = XpathFactory.newInstance;
+factory = XPathFactory.newInstance;
 
 % Initialize a new xpath to the variable xpath
-xpath = factory.newXpath;
+xpath = factory.newXPath;
 
 % Declare a new xpath search expression.  Search for all fullPlanDataArrays
 expression = ...
