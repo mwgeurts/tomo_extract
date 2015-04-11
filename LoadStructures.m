@@ -300,6 +300,9 @@ for i = 1:n
             structures{i}.name, nodeList.getLength));
     end
     
+    % Initialize points cell array
+    structures{i}.points = cell(nodeList.getLength, 1);
+    
     % Loop through ROICurves
     for j = 1:nodeList.getLength
         
@@ -315,6 +318,9 @@ for i = 1:n
             % Read in curve points
             points = str2num(subnode.getFirstChild.getNodeValue); %#ok<ST2NM>
 
+            % Store raw points 
+            structures{i}.points{j} = points;
+            
             % Determine slice index by searching IEC-Y index using nearest
             % neighbor interpolation
             slice = interp1(varargin{3}.start(3):varargin{3}.width(3):...
