@@ -211,6 +211,18 @@ for i = 1:nodeList.getLength
     % Store the plan trial UID
     planData.planLabel = char(subnode.getFirstChild.getNodeValue);
     
+    % Search for plan delivery type
+    subexpression = xpath.compile('planDeliveryType');
+
+     % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+    
+    % Store the plan trial UID
+    planData.planType = char(subnode.getFirstChild.getNodeValue);
+    
     % Stop searching, as the plan trial UID was found
     break;
 end
