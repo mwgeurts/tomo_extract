@@ -214,7 +214,7 @@ for i = 1:nodeList.getLength
     % Search for plan delivery type
     subexpression = xpath.compile('planDeliveryType');
 
-     % Evaluate xpath expression and retrieve the results
+    % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
     % Retrieve a handle to the results
@@ -267,6 +267,9 @@ for i = 1:nodeList.getLength
         continue
     end
     
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+    
     % If the optimization result databaseParent UID does not match the plan
     % trial's UID, this optimization result is associated with a different
     % plan, so continue to next result
@@ -286,6 +289,9 @@ for i = 1:nodeList.getLength
         continue
     end
     
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+    
     % If the optimization result is not current, continue to next result
     if strcmp(char(subnode.getFirstChild.getNodeValue), 'true') == 0
         continue
@@ -302,6 +308,9 @@ for i = 1:nodeList.getLength
         continue
     end
     
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+    
     % Store the fluence plan UID
     planData.fluenceUID = char(subnode.getFirstChild.getNodeValue);
     
@@ -315,6 +324,9 @@ for i = 1:nodeList.getLength
     if subnodeList.getLength == 0
         continue
     end
+    
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
     
     % Store the iteration number
     planData.iterations = char(subnode.getFirstChild.getNodeValue);
