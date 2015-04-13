@@ -495,13 +495,13 @@ if nargin >= 2
     
     % If the local system is unix-based
     if isunix
-        [status, cmdout] = system(['cp "',fullfile(modelfolder, '*.*'), ...
-            '" "', folder, '/"']);
+        [status, cmdout] = system(['cp ',fullfile(modelfolder, '*.*'), ...
+            ' ', folder, '/']);
 
     % Otherwise, if Windows
     elseif ispc
-        [status, cmdout] = system(['copy "',fullfile(modelfolder, '*.*'), ...
-            '" "', folder, '\"']);
+        [status, cmdout] = system(['copy ',fullfile(modelfolder, '*.*'), ...
+            ' ', folder, '\']);
     end
     
     % If status is 0, cp was successful.  Otherwise, log error
@@ -683,7 +683,7 @@ for i = plan.lowerLeafIndex + 1:plan.lowerLeafIndex + ...
     % Loop through the number of projections for this leaf
     for j = 1:size(sinogram, 2)
 
-        % Write "open" and "close" events based on the sinogram leaf
+        % Write open and close events based on the sinogram leaf
         % open time. 0.5 is subtracted to remove the one based indexing
         % and center the open time on the projection.
         fwrite(fid,j - 0.5 - sinogram(i,j)/2, 'double');
@@ -779,20 +779,20 @@ else
             
             % cd to temporary folder, then call gpusadose
             if exist('Event', 'file') == 2
-                Event(['Executing gpusadose -C "', folder,'/dose.cfg"']);
+                Event(['Executing gpusadose -C ', folder,'/dose.cfg']);
             end
             [status, cmdout] = ...
-                system(['cd "', folder, '"; gpusadose -C ./dose.cfg']);
+                system(['cd ', folder, '; gpusadose -C ./dose.cfg']);
         
         % Otherwise, if Windows
         elseif ispc
             
             % cd to temporary folder, then call gpusadose
             if exist('Event', 'file') == 2
-                Event(['Executing gpusadose.exe -C "', folder,'\dose.cfg"']);
+                Event(['Executing gpusadose.exe -C ', folder,'\dose.cfg']);
             end
             [status, cmdout] = ...
-                system(['cd "', folder, '"; gpusadose.exe -C .\dose.cfg']);
+                system(['cd ', folder, '; gpusadose.exe -C .\dose.cfg']);
         end
         
     % Otherwise, if using sadose
@@ -803,20 +803,20 @@ else
             
             % cd to temporary folder, then call gpusadose
             if exist('Event', 'file') == 2
-                Event(['Executing sadose -C "', folder,'/dose.cfg"']);
+                Event(['Executing sadose -C ', folder,'/dose.cfg']);
             end
             [status, cmdout] = ...
-                system(['cd "', folder, '"; sadose -C ./dose.cfg']);
+                system(['cd ', folder, '; sadose -C ./dose.cfg']);
         
         % Otherwise, if Windows
         elseif ispc
             
             % cd to temporary folder, then call gpusadose
             if exist('Event', 'file') == 2
-                Event(['Executing sadose.exe -C "', folder,'\dose.cfg"']);
+                Event(['Executing sadose.exe -C ', folder,'\dose.cfg']);
             end
             [status, cmdout] = ...
-                system(['cd "', folder, '"; sadose.exe -C .\dose.cfg']);
+                system(['cd ', folder, '; sadose.exe -C .\dose.cfg']);
         end
         
     end
