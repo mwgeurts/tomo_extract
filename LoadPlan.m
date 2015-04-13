@@ -245,7 +245,7 @@ end
 
 % Search for fluence delivery plan associated with the plan trial
 expression = xpath.compile(['//fullPlanTrialArray/fullPlanTrialArray/', ...
-    'optimizationResult');
+    'optimizationResult']);
 
 % Evaluate xpath expression and retrieve the results
 nodeList = expression.evaluate(doc, XPathConstants.NODESET);  
