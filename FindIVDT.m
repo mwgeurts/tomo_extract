@@ -410,6 +410,7 @@ end
 
 % Search for all imaging equipment XMLs in the patient archive folder
 ivdtlist = dir(fullfile(path,'*_imagingequipment.xml'));
+ivdtnames = cell();
 
 % Loop through the image equipment XMLs
 for i = 1:size(ivdtlist,1)
@@ -443,6 +444,9 @@ for i = 1:size(ivdtlist,1)
         % Continue to next result
         continue;
     end
+    
+    % Parse out name from filename
+    [~, ivdtnames{length(ivdtnames)+1}, ~] = fileparts(ivdtlist(i).name);
 
     % Retrieve a handle to the databaseUID result
     node = nodeList.item(0);
@@ -478,7 +482,7 @@ if s == 0
         % Ask the user to select an IVDT
         [s, ~] = listdlg('PromptString', ['A matching IVDT was not found. ', ...
             'Select an equivalent IVDT:'], 'SelectionMode', 'single', ...
-            'ListString', ivdtlist);
+            'ListString', ivdtnames);
     
     end
     
