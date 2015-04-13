@@ -305,6 +305,20 @@ for i = 1:nodeList.getLength
     % Store the fluence plan UID
     planData.fluenceUID = char(subnode.getFirstChild.getNodeValue);
     
+    % Search for iteration number
+    subexpression = xpath.compile('iterationNumber');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no iteration number was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+    
+    % Store the iteration number
+    planData.iterations = char(subnode.getFirstChild.getNodeValue);
+    
     % Stop searching, as the fluence plan UID was found
     break;
 end
@@ -312,10 +326,10 @@ end
 % If not plan trial UID was found, stop
 if ~isfield(planData, 'fluenceUID')
     if exist('Event', 'file') == 2
-        Event(sprintf(['A current fluence delivery plan was ', ...
-            'not found in %s'], planUID, name), 'ERROR');
+        Event(sprintf(['A current fluence delivery plan for plan UID %s ', ...
+            'was not found in %s'], planUID, name), 'ERROR');
     else
-        error(['A current fluence delivery plan was ', ...
+        error(['A current fluence delivery plan for plan UID %s was ', ...
             'not found in %s'], planUID, name);
     end
 end
