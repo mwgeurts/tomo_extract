@@ -6,6 +6,10 @@ function ivdt = FindIVDT(path, id, type)
 % that value.  If 'TomoMachine', the machine archive is parsed for the most 
 % recent imaging equipment and the UID is returned.
 %
+% If the UID was not found, and the Java runtime environment exists, the
+% user will be prompted to select an IVDT from the list of IVDTs in the
+% archive.
+%
 % The following variables are required for proper execution: 
 %   path: path to the patient archive XML file
 %   id: identifier, dependent on type. If MVCT, id should be the delivered 
@@ -395,6 +399,10 @@ if strcmp(imagingUID, '')
     end
 end
 
+%% Search IVDTs
+% Initialize IVDT match id
+s = 0;
+
 % Notify user that imaging archives are now being searched
 if exist('Event', 'file') == 2
     Event(sprintf('Searching %s for imaging equipment archives', path));
@@ -449,80 +457,106 @@ for i = 1:size(ivdtlist,1)
                 imagingUID, ivdtlist(i).name));
         end
         
+        % Store matched IVDT 
+        s = i;
+        
+        % Since the correct IVDT was found, break the for loop
+        break;
+        
     % Otherwise, continue to next result    
     else
         continue;
     end
-
-    % Declare new xpath search expression for sinogram file
-    expression = xpath.compile(...
-        '//imagingEquipment/imagingEquipmentData/sinogramDataFile');
-
-    % Evaluate xpath expression and retrieve the results
-    nodeList = expression.evaluate(doc, XPathConstants.NODESET);
-    
-    % Store the first returned value
-    node = nodeList.item(0);
-
-    % Store the path to the IVDT sinogram (data array)
-    ivdtsin = fullfile(path,char(node.getFirstChild.getNodeValue));
-
-    % Declare new xpath search for the IVDT sinogram's dimensions
-    expression = xpath.compile(...
-        '//imagingEquipment/imagingEquipmentData/dimensions/dimensions');
-
-    % Evaluate xpath expression and retrieve the results
-    nodeList = expression.evaluate(doc, XPathConstants.NODESET);           
-
-    % Store the first returned value
-    node = nodeList.item(0);
-    
-    % Store the IVDT x dimensions 
-    ivdtdim(1) = str2double(node.getFirstChild.getNodeValue);
-    
-    % Store the first returned value
-    node = nodeList.item(1);
-    
-    % Store the IVDT y dimensions
-    ivdtdim(2) = str2double(node.getFirstChild.getNodeValue);
-
-    % Open a file handle to the IVDT sinogram, using binary mode
-    fid = fopen(ivdtsin,'r','b');
-
-    % Read the sinogram as single values, using the dimensions
-    % determined above
-    ivdt = reshape(fread(fid, ivdtdim(1)*ivdtdim(2), ...
-        'single'), ivdtdim(1), ivdtdim(2));
-
-    % Close the file handle
-    fclose(fid);
-    
-    % Clear temporary variables
-    clear fid node nodeList expression ivdtdim ivdtsin ivdtlist doc ...
-        factory xpath;
-    
-    % Log completion of search
-    if exist('Event', 'file') == 2
-        Event(sprintf('IVDT data retrieved for %s in %0.3f seconds', ...
-            imagingUID, toc));
-    end
-    
-    % Since the correct IVDT was found, break the for loop
-    break;
 end
 
-% If the size of ivdt is still zero, not matching IVDT UID was found
-if size(ivdt,1) == 0
-    if exist('Event', 'file') == 2
-        Event(sprintf('A matching IVDT was not found for UID %s', ...
-            imagingUID), 'ERROR');
-    else
-        error('A matching IVDT was not found for UID %s', imagingUID);
+% If no IVDT was found
+if s == 0
+    
+    % I a valid screen size is returned (MATLAB was run without -nodisplay)
+    if usejava('jvm') && feature('ShowFigureWindows')
+    
+        % Ask the user to select an IVDT
+        [s, ~] = listdlg('PromptString', ['A matching IVDT was not found. ', ...
+            'Select an equivalent IVDT:'], 'SelectionMode', 'single', ...
+            'ListString', ivdtlist);
+    
+    end
+    
+    % If no IVDT is still selected (Java is not available or the user did 
+    % not select an IVDT)
+    if s == 0
+        
+        % Throw an error
+        if exist('Event', 'file') == 2
+            Event(sprintf('A matching IVDT was not found for UID %s', ...
+                imagingUID), 'ERROR');
+        else
+            error('A matching IVDT was not found for UID %s', imagingUID);
+        end
     end
 end
-    
-% Clear temporary variable
-clear imagingUID;
+
+% Read in the IVDT XML and store the Document Object Model node to doc
+doc = xmlread(fullfile(path, ivdtlist(s).name));
+
+% Initialize a new xpath instance to the variable factory
+factory = XPathFactory.newInstance;
+
+% Initialize a new xpath to the variable xpath
+xpath = factory.newXPath;
+
+% Declare new xpath search expression for sinogram file
+expression = xpath.compile(...
+    '//imagingEquipment/imagingEquipmentData/sinogramDataFile');
+
+% Evaluate xpath expression and retrieve the results
+nodeList = expression.evaluate(doc, XPathConstants.NODESET);
+
+% Store the first returned value
+node = nodeList.item(0);
+
+% Store the path to the IVDT sinogram (data array)
+ivdtsin = fullfile(path,char(node.getFirstChild.getNodeValue));
+
+% Declare new xpath search for the IVDT sinogram's dimensions
+expression = xpath.compile(...
+    '//imagingEquipment/imagingEquipmentData/dimensions/dimensions');
+
+% Evaluate xpath expression and retrieve the results
+nodeList = expression.evaluate(doc, XPathConstants.NODESET);           
+
+% Store the first returned value
+node = nodeList.item(0);
+
+% Store the IVDT x dimensions 
+ivdtdim(1) = str2double(node.getFirstChild.getNodeValue);
+
+% Store the first returned value
+node = nodeList.item(1);
+
+% Store the IVDT y dimensions
+ivdtdim(2) = str2double(node.getFirstChild.getNodeValue);
+
+% Open a file handle to the IVDT sinogram, using binary mode
+fid = fopen(ivdtsin,'r','b');
+
+% Read the sinogram as single values, using the dimensions
+% determined above
+ivdt = reshape(fread(fid, ivdtdim(1)*ivdtdim(2), ...
+    'single'), ivdtdim(1), ivdtdim(2));
+
+% Close the file handle
+fclose(fid);
+
+% Clear temporary variables
+clear fid node nodeList expression ivdtdim ivdtsin ivdtlist doc ...
+    factory xpath ivdtmatch;
+
+% Log completion of search
+if exist('Event', 'file') == 2
+    Event(sprintf('IVDT data retrieved for %s in %0.3f seconds', ...
+        imagingUID, toc));
+end
 
 % Catch errors, log, and rethrow
 catch err
@@ -532,3 +566,7 @@ catch err
         rethrow(err);
     end
 end
+    
+% Clear temporary variable
+clear imagingUID;
+
