@@ -240,7 +240,7 @@ for i = 1:nodeList.getLength
         
         % If no curve data file was found, this structure may not contain
         % any contours
-        if nodeList.getLength == 0
+        if subnodeList.getLength == 0
             
             % Clear structure
             structures{n} = [];
