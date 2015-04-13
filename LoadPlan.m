@@ -297,8 +297,8 @@ for i = 1:nodeList.getLength
         continue
     end
     
-    % Search for fluence plan delivery UID
-    subexpression = xpath.compile('fluencePlanDeliveryUID');
+    % Search for fluence delivery plan UID
+    subexpression = xpath.compile('fluenceDeliveryPlanUID');
 
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
@@ -311,7 +311,7 @@ for i = 1:nodeList.getLength
     % Retrieve a handle to the results
     subnode = subnodeList.item(0);
     
-    % Store the fluence plan UID
+    % Store the fluence delivery plan UID
     planData.fluenceUID = char(subnode.getFirstChild.getNodeValue);
     
     % Search for iteration number
