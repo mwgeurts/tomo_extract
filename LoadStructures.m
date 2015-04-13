@@ -16,9 +16,9 @@ function structures = LoadStructures(varargin)
 %       not be loaded). If not provided, all structures will be loaded
 %
 % The following variables are returned upon succesful completion:
-%   structures: cell array of structure names, color, and 3D mask array of
-%       same size as reference image containing fraction of voxel inclusion
-%       in structure
+%   structures: cell array of structure names, color, width, start, 
+%       dicmensions, and 3D mask array of same size as reference image 
+%       containing fraction of voxel inclusion in structure
 %     
 % Below is an example of how this function is used:
 %
@@ -369,6 +369,11 @@ for i = 1:n
     
     % Flip the structure mask in the first dimension
     structures{i}.mask = fliplr(structures{i}.mask);
+    
+    % Copy structure width, start, and dimensions arrays from image
+    structures{n}.width = varargin{3}.width;
+    structures{n}.start = varargin{3}.start;
+    structures{n}.dimensions = varargin{3}.dimensions;
     
     % Check if at least one voxel in the mask was set to true
     if max(max(max(structures{i}.mask))) == 0
