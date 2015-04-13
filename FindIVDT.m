@@ -482,7 +482,7 @@ if s == 0
         % Ask the user to select an IVDT
         [s, ~] = listdlg('PromptString', ['A matching IVDT was not found. ', ...
             'Select an equivalent IVDT:'], 'SelectionMode', 'single', ...
-            'ListString', ivdtnames);
+            'ListSize', [500 300], 'ListString', ivdtnames);
     
     end
     
