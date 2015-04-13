@@ -199,7 +199,7 @@ for i = 1:nodeList.getLength
     % Store the plan trial UID
     planData.planTrialUID = char(subnode.getFirstChild.getNodeValue);
     
-    % Search for approved plan trial UID
+    % Search for plan label
     subexpression = xpath.compile('planLabel');
 
     % Evaluate xpath expression and retrieve the results
@@ -208,7 +208,7 @@ for i = 1:nodeList.getLength
     % Retrieve a handle to the results
     subnode = subnodeList.item(0);
     
-    % Store the plan trial UID
+    % Store the plan label
     planData.planLabel = char(subnode.getFirstChild.getNodeValue);
     
     % Search for plan delivery type
@@ -220,7 +220,7 @@ for i = 1:nodeList.getLength
     % Retrieve a handle to the results
     subnode = subnodeList.item(0);
     
-    % Store the plan trial UID
+    % Store the plan delivery type
     planData.planType = char(subnode.getFirstChild.getNodeValue);
     
     % Stop searching, as the plan trial UID was found
@@ -234,6 +234,88 @@ if ~isfield(planData, 'planTrialUID')
             'not found in %s'], planUID, name), 'ERROR');
     else
         error(['An approved plan trial UID for plan UID %s was ', ...
+            'not found in %s'], planUID, name);
+    end
+end
+
+%% Search for optimization result
+if exist('Event', 'file') == 2
+    Event('Searching for optimization result');
+end
+
+% Search for fluence delivery plan associated with the plan trial
+expression = xpath.compile(['//fullPlanTrialArray/fullPlanTrialArray/', ...
+    'optimizationResult');
+
+% Evaluate xpath expression and retrieve the results
+nodeList = expression.evaluate(doc, XPathConstants.NODESET);  
+
+% Loop through the optimizationResults
+for i = 1:nodeList.getLength
+    
+    % Retrieve a handle to this optimization result
+    node = nodeList.item(i-1);
+
+    % Search for optimization result parent UID
+    subexpression = xpath.compile('dbInfo/databaseParent');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no database parent was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+    
+    % If the optimization result databaseParent UID does not match the plan
+    % trial's UID, this optimization result is associated with a different
+    % plan, so continue to next result
+    if strcmp(char(subnode.getFirstChild.getNodeValue), ...
+            planData.planTrialUID) == 0
+        continue
+    end
+    
+    % Search for current flag
+    subexpression = xpath.compile('isFluenceDeliveryPlanCurrent');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no current flag was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+    
+    % If the optimization result is not current, continue to next result
+    if strcmp(char(subnode.getFirstChild.getNodeValue), 'true') == 0
+        continue
+    end
+    
+    % Search for fluence plan delivery UID
+    subexpression = xpath.compile('fluencePlanDeliveryUID');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no UID was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+    
+    % Store the fluence plan UID
+    planData.fluenceUID = char(subnode.getFirstChild.getNodeValue);
+    
+    % Stop searching, as the fluence plan UID was found
+    break;
+end
+
+% If not plan trial UID was found, stop
+if ~isfield(planData, 'fluenceUID')
+    if exist('Event', 'file') == 2
+        Event(sprintf(['A current fluence delivery plan was ', ...
+            'not found in %s'], planUID, name), 'ERROR');
+    else
+        error(['A current fluence delivery plan was ', ...
             'not found in %s'], planUID, name);
     end
 end
@@ -257,13 +339,13 @@ for i = 1:nodeList.getLength
     % Retrieve a handle to this delivery plan
     node = nodeList.item(i-1);
 
-    % Search for delivery plan parent UID
-    subexpression = xpath.compile('deliveryPlan/dbInfo/databaseParent');
+    % Search for delivery plan UID
+    subexpression = xpath.compile('deliveryPlan/dbInfo/databaseUID');
 
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
-    % If no database parent was found, continue to next result
+    % If no database UID was found, continue to next result
     if subnodeList.getLength == 0
         continue
     end
@@ -271,11 +353,11 @@ for i = 1:nodeList.getLength
     % Otherwise, retrieve a handle to the results
     subnode = subnodeList.item(0);
 
-    % If the delivery databaseParent UID does not match the plan
-    % trial's UID, this delivery plan is associated with a different
+    % If the delivery database UID does not match the current optimization 
+    % result plan UID, this delivery plan is associated with a different
     % plan, so continue to next result
     if strcmp(char(subnode.getFirstChild.getNodeValue), ...
-            planData.planTrialUID) == 0
+            planData.fluenceUID) == 0
         continue
     end
 
