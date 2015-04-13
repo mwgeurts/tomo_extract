@@ -227,7 +227,7 @@ for i = 1:nodeList.getLength
     break;
 end
 
-% If not plan trial UID was found, stop
+% If no plan trial UID was found, stop
 if ~isfield(planData, 'planTrialUID')
     if exist('Event', 'file') == 2
         Event(sprintf(['An approved plan trial UID for plan UID %s was ', ...
@@ -935,7 +935,7 @@ planData.events{k,3} = 1.7976931348623157E308;
 % Sort events by tau
 planData.events = sortrows(planData.events);
 
-%% Save fluence sinogram
+%% Load fluence delivery plan
 % Log start of sinogram load
 if exist('Event', 'file') == 2
     Event(sprintf('Loading delivery plan binary data from %s', ...
@@ -1076,7 +1076,7 @@ for i = 1:nodeList.getLength
         continue
     end
     
-    %% Load lower lead index
+    %% Load lower leaf index
     % Search for delivery plan lower leaf index
     subexpression = ...
         xpath.compile('deliveryPlan/states/states/lowerLeafIndex');
