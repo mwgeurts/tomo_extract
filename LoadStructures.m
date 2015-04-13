@@ -238,6 +238,20 @@ for i = 1:nodeList.getLength
         % Evaluate xpath expression and retrieve the results
         subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
         
+        % If no curve data file was found, this structure may not contain
+        % any contours
+        if nodeList.getLength == 0
+            
+            % Clear structure
+            structures{n} = [];
+            
+            % Reduce counter
+            n = n - 1;
+            
+            % Continue to next structure
+            continue
+        end
+        
         % Store the first returned value
         subnode = subnodeList.item(0);
         
