@@ -410,7 +410,7 @@ end
 
 % Search for all imaging equipment XMLs in the patient archive folder
 ivdtlist = dir(fullfile(path,'*_imagingequipment.xml'));
-ivdtnames = cell();
+ivdtnames = cell(0);
 
 % Loop through the image equipment XMLs
 for i = 1:size(ivdtlist,1)
@@ -476,7 +476,7 @@ end
 % If no IVDT was found
 if s == 0
     
-    % I a valid screen size is returned (MATLAB was run without -nodisplay)
+    % If a valid screen size is returned (MATLAB was run without -nodisplay)
     if usejava('jvm') && feature('ShowFigureWindows')
     
         % Ask the user to select an IVDT
