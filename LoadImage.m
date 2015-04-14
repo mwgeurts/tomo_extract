@@ -67,7 +67,7 @@ expression = ...
 % Evaluate xpath expression and retrieve the results
 nodeList = expression.evaluate(doc, XPathConstants.NODESET);
 
-% If a UID was found
+% If a patient name was found
 if nodeList.getLength > 0
 
     % Store the first returned value
@@ -94,7 +94,7 @@ expression = ...
 % Evaluate xpath expression and retrieve the results
 nodeList = expression.evaluate(doc, XPathConstants.NODESET);
 
-% If a UID was found
+% If a patient ID was found
 if nodeList.getLength > 0
 
     % Store the first returned value
@@ -111,7 +111,7 @@ expression = ...
 % Evaluate xpath expression and retrieve the results
 nodeList = expression.evaluate(doc, XPathConstants.NODESET);
 
-% If a UID was found
+% If a birthdate was found
 if nodeList.getLength > 0
 
     % Store the first returned value
@@ -129,7 +129,7 @@ expression = ...
 % Evaluate xpath expression and retrieve the results
 nodeList = expression.evaluate(doc, XPathConstants.NODESET);
 
-% If a UID was found
+% If a gender was found
 if nodeList.getLength > 0
 
     % Store the first returned value
@@ -383,13 +383,13 @@ for i = 1:nodeList.getLength
         subsubnodeList = ...
             subsubexpression.evaluate(subnode, XPathConstants.NODESET);
 
-        % If a couch checksum was found
+        % If an isocenter X was found
         if subsubnodeList.getLength > 0
 
             % Store the first returned value
             subsubnode = subsubnodeList.item(0);
 
-            % Save the couch checksum to return structure as char array
+            % Save the isocenter X to return structure as char array
             image.isocenter(1) = ...
                 str2double(subsubnode.getFirstChild.getNodeValue);
         end
@@ -401,13 +401,13 @@ for i = 1:nodeList.getLength
         subsubnodeList = ...
             subsubexpression.evaluate(subnode, XPathConstants.NODESET);
 
-        % If a couch checksum was found
+        % If an isocenter Y was found
         if subsubnodeList.getLength > 0
 
             % Store the first returned value
             subsubnode = subsubnodeList.item(0);
 
-            % Save the couch checksum to return structure as char array
+            % Save the isocenter Y to return structure as char array
             image.isocenter(2) = ...
                 str2double(subsubnode.getFirstChild.getNodeValue);
         end
@@ -419,13 +419,13 @@ for i = 1:nodeList.getLength
         subsubnodeList = ...
             subsubexpression.evaluate(subnode, XPathConstants.NODESET);
 
-        % If a couch checksum was found
+        % If an isocenter Z was found
         if subsubnodeList.getLength > 0
 
             % Store the first returned value
             subsubnode = subsubnodeList.item(0);
 
-            % Save the couch checksum to return structure as char array
+            % Save the isocenter Z to return structure as char array
             image.isocenter(3) = ...
                 str2double(subsubnode.getFirstChild.getNodeValue);
         end
@@ -635,6 +635,19 @@ for i = 1:nodeList.getLength
     
     % Plan has been found, so exit loop
     break;
+end
+
+% If a filename does not exist
+if ~isfield(image, 'filename')
+    
+    % Throw an error
+    if exist('Event', 'file') == 2
+        Event(sprintf(['An associated image filename was not found ', ...
+            'for UID %s'], planUID), 'ERROR');
+    else
+        error('An associated image filename was not found for UID %s', ...
+            planUID);
+    end
 end
 
 %% Load the planned image array
