@@ -46,6 +46,7 @@ function ivdt = FindIVDT(path, id, type)
 % Execute in try/catch statement
 try
 
+%% Find imaging equipment UID
 % Initialize imagingUID temporary string and empty return array
 imagingUID = '';
 ivdt = [];
@@ -189,7 +190,7 @@ case 'TomoPlan'
     
     % UID passed to FindIVDT is imaging equipment, so this one's easy
     imagingUID = id;
-
+    
 % Otherwise, if type is TomoMachine
 case 'TomoMachine'
     
@@ -399,7 +400,7 @@ if strcmp(imagingUID, '')
     end
 end
 
-%% Search IVDTs
+%% Search Imaging Archives
 % Initialize IVDT match id
 s = 0;
 
@@ -500,6 +501,7 @@ if s == 0
     end
 end
 
+%% Load IVDT from Imaging Archive
 % Read in the IVDT XML and store the Document Object Model node to doc
 doc = xmlread(fullfile(path, ivdtlist(s).name));
 
@@ -552,6 +554,7 @@ ivdt = reshape(fread(fid, ivdtdim(1)*ivdtdim(2), ...
 % Close the file handle
 fclose(fid);
 
+%% Finish up
 % Clear temporary variables
 clear fid node nodeList expression ivdtdim ivdtsin ivdtlist doc ...
     factory xpath ivdtmatch;
