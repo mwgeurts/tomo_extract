@@ -475,7 +475,7 @@ for i = 1:size(ivdtlist,1)
 end
 
 % If no IVDT was found
-if s == 0
+if s == 0 && size(ivdtlist,1) > 0
     
     % If a valid screen size is returned (MATLAB was run without -nodisplay)
     if usejava('jvm') && feature('ShowFigureWindows')
@@ -498,6 +498,17 @@ if s == 0
         else
             error('A matching IVDT was not found for UID %s', imagingUID);
         end
+    end
+   
+% Otherwise, if no imaging archives were found
+elseif size(ivdtlist,1) == 0
+    
+    % Throw an error
+    if exist('Event', 'file') == 2
+        Event(sprintf('An IVDT was not found for UID %s', ...
+            imagingUID), 'ERROR');
+    else
+        error('An IVDT was not found for UID %s', imagingUID);
     end
 end
 
