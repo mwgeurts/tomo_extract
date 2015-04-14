@@ -1,7 +1,7 @@
 function plans = FindPlans(varargin)
 % FindPlans loads all delivery plan trial UIDs from a specified TomoTherapy 
 % patient archive. Only approved, non-DQA plans are returned. This function
-% has currently been validated for version 4.X and 5.X patient archives.
+% has currently been validated for version 3.X, 4.X and 5.X archives.
 %
 % The following variables are required for proper execution: 
 %   varargin{1}: path to the patient archive XML file

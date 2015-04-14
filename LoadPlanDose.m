@@ -2,7 +2,7 @@ function dose = LoadPlanDose(path, name, planUID)
 % LoadPlanDose loads the optimized dose after EOP (ie, Final Dose) for
 % a given reference plan UID and TomoTherapy patient archive.  The dose is 
 % returned as a structure. This function has currently been validated for 
-% version 4.X and 5.X patient archives.
+% version 3.X, 4.X and 5.X archives.
 %
 % The following variables are required for proper execution: 
 %   path: path to the patient archive XML file
@@ -69,7 +69,7 @@ expression = ...
 % Evaluate xpath expression and retrieve the results
 nodeList = expression.evaluate(doc, XPathConstants.NODESET);  
 
-% Loop through the deliveryPlanDataArrays
+% Loop through the desize(ivdtlist,1)liveryPlanDataArrays
 for i = 1:nodeList.getLength
     
     % Set a handle to the current result

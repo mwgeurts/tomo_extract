@@ -2,7 +2,7 @@ function planData = LoadPlan(path, name, planUID)
 % LoadPlan loads the delivery plan from a specified TomoTherapy patient 
 % archive and plan trial UID.  This data can be used to perform dose 
 % calculation via CalcDose. This function has currently been validated 
-% for version 4.X and 5.X patient archives.
+% for version 3.X, 4.X and 5.X archives.
 %
 % The following variables are required for proper execution: 
 %   path: path to the patient archive XML file
@@ -75,7 +75,7 @@ expression = ...
 % Evaluate xpath expression and retrieve the results
 nodeList = expression.evaluate(doc, XPathConstants.NODESET);
 
-% If a UID was found
+% If patient name was found
 if nodeList.getLength > 0
 
     % Store the first returned value
@@ -119,7 +119,7 @@ expression = ...
 % Evaluate xpath expression and retrieve the results
 nodeList = expression.evaluate(doc, XPathConstants.NODESET);
 
-% If a UID was found
+% If a birthdate was found
 if nodeList.getLength > 0
 
     % Store the first returned value
@@ -137,7 +137,7 @@ expression = ...
 % Evaluate xpath expression and retrieve the results
 nodeList = expression.evaluate(doc, XPathConstants.NODESET);
 
-% If a UID was found
+% If a gender was found
 if nodeList.getLength > 0
 
     % Store the first returned value
