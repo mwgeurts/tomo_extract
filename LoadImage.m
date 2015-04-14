@@ -246,6 +246,17 @@ for i = 1:nodeList.getLength
         % Save patient position to return structure as char array
         image.position = ...
             char(subnode.getFirstChild.getNodeValue);
+    
+        % Log position
+        if exist('Event', 'file') == 2
+            Event(['The patient position was identified as ', ...
+                image.position]);
+        end
+        
+    % Otherwise, warn the user
+    elseif exist('Event', 'file') == 2
+        Event(sprintf('The patient position was not found in %s', name), ...
+            'WARN');
     end
     
     %% Load structure set UID
