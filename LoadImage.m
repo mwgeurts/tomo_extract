@@ -230,6 +230,24 @@ for i = 1:nodeList.getLength
             image.fullDoseIVDT, 'TomoPlan');
     end
     
+    %% Load patient position
+    % Search for procedure XML object patientPosition
+    subexpression = xpath.compile('plan/patientPosition');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a patient position was found
+    if subnodeList.getLength > 0
+        
+        % Store the first returned value
+        subnode = subnodeList.item(0);
+
+        % Save patient position to return structure as char array
+        image.position = ...
+            char(subnode.getFirstChild.getNodeValue);
+    end
+    
     %% Load structure set UID
     % Search for procedure XML object planStructureSetUID
     subexpression = xpath.compile('plan/planStructureSetUID');
@@ -237,13 +255,17 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
-    % Store the first returned value
-    subnode = subnodeList.item(0);
+    % If a structure set UID was found
+    if subnodeList.getLength > 0
+        
+        % Store the first returned value
+        subnode = subnodeList.item(0);
 
-    % Save structure set UID to return structure as char array
-    image.structureSetUID = ...
-        char(subnode.getFirstChild.getNodeValue);
-
+        % Save structure set UID to return structure as char array
+        image.structureSetUID = ...
+            char(subnode.getFirstChild.getNodeValue);
+    end
+    
     %% Load couch checksum and insertion position
     % Search for procedure XML object couchChecksum
     subexpression = xpath.compile('plan/couchChecksum');
