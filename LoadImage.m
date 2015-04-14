@@ -190,10 +190,46 @@ for i = 1:nodeList.getLength
     image.fullDoseIVDT = ...
         char(subnode.getFirstChild.getNodeValue);
 
-    % Load the reference plan IVDT using FindIVDT
-    image.ivdt = FindIVDT(path, ...
-        image.fullDoseIVDT, 'TomoPlan');
+    % Search for full plan IVDT data array (works with 3.X archives)
+    subexpression = ...
+        xpath.compile('fullPlanIVDTDataArray/fullPlanIVDTDataArray');
 
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+    
+    % If a IVDT data was found within the patient archive
+    if subnodeList.getLength > 0
+        
+        % Log action
+        if exist('Event', 'file') == 2
+            Event('Loading legacy IVDT data array from patient XML');
+        end
+        
+        % Initialize IVDT array
+        image.ivdt = zeros(subnodeList.getLength, 1);
+        
+        % Loop through IVDT entries
+        for j = 1:subnodeList.getLength
+            
+            % Retrieve handle to this IVDT entry
+            subnode = subnodeList.item(j-1);
+            
+            % Store numerical value
+            image.ivdt(j) = ...
+                str2double(subnode.getFirstChild.getNodeValue);
+        end
+        
+        % Reshape IVDT array
+        image.ivdt = reshape(image.ivdt, [], 2);
+        
+    % Otherwise, look within imaging archives using FindIVDT
+    else
+    
+        % Load the IVDT
+        image.ivdt = FindIVDT(path, ...
+            image.fullDoseIVDT, 'TomoPlan');
+    end
+    
     %% Load structure set UID
     % Search for procedure XML object planStructureSetUID
     subexpression = xpath.compile('plan/planStructureSetUID');
