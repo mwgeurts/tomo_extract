@@ -81,7 +81,7 @@ if nodeList.getLength > 0
     subnode = nodeList.item(0);
     
     % Set patient name
-    image.patientName = char(subnode.getFirstChild.getNodeValue);
+    planData.patientName = char(subnode.getFirstChild.getNodeValue);
 
 % Otherwise, warn the user that patient info wasn't found
 else
@@ -108,7 +108,7 @@ if nodeList.getLength > 0
     subnode = nodeList.item(0);
     
     % Set patient ID
-    image.patientID = char(subnode.getFirstChild.getNodeValue);
+    planData.patientID = char(subnode.getFirstChild.getNodeValue);
 end
 
 % Search for patient XML object patientBirthDate
@@ -125,7 +125,7 @@ if nodeList.getLength > 0
     subnode = nodeList.item(0);
     
     % Set patient birth date
-    image.patientBirthDate = ...
+    planData.patientBirthDate = ...
         char(subnode.getFirstChild.getNodeValue);
 end
 
@@ -143,7 +143,7 @@ if nodeList.getLength > 0
     subnode = nodeList.item(0);
     
     % Set patient sex
-    image.patientSex = char(subnode.getFirstChild.getNodeValue);
+    planData.patientSex = char(subnode.getFirstChild.getNodeValue);
 end
 
 %% Load plan info
