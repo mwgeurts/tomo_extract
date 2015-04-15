@@ -233,7 +233,7 @@ for i = 1:nodeList.getLength
     
     % Store the date and time as a timestamp
     image.timestamp = datetime([d,'-',t], 'InputFormat', ...
-        'yyyyMMdd-hhmmss');
+        'yyyyMMdd-HHmmss');
     
     %% Load structure set UID
     % Search for procedure XML object planStructureSet databaseUID

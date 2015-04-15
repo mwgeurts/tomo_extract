@@ -342,7 +342,7 @@ for i = 1:nodeList.getLength
     
     % Store the date and time as a timestamp
     image.timestamp = datetime([d,'-',t], 'InputFormat', ...
-        'yyyyMMdd-hhmmss');
+        'yyyyMMdd-HHmmss');
 
     %% Load associated plan trial
     % Search for procedure XML object approvedPlanTrialUID

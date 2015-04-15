@@ -241,7 +241,7 @@ for i = 1:nodeList.getLength
     
     % Store the date and time as a timestamp
     planData.timestamp = datetime([d,'-',t], 'InputFormat', ...
-        'yyyyMMdd-hhmmss');
+        'yyyyMMdd-HHmmss');
     
     % Search for plan delivery type
     subexpression = xpath.compile('plan/intendedTableMotion');
