@@ -62,7 +62,7 @@ factory = XPathFactory.newInstance;
 % Initialize a new xpath to the variable xpath
 xpath = factory.newXPath;
 
-% Search forimages associated with the plan UID
+% Search for images associated with the plan UID
 expression = ...
     xpath.compile('//fullImageDataArray/fullImageDataArray/image');
 
