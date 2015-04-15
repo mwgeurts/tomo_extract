@@ -40,6 +40,9 @@ if exist('Event', 'file') == 2
     tic;
 end
 
+% Initialize return variable
+version = 'UNKNOWN';
+
 % The patient XML is parsed using xpath class
 import javax.xml.xpath.*
 
@@ -64,13 +67,30 @@ nodeList = expression.evaluate(doc, XPathConstants.NODESET);
 
 % If no build version was found, return UNKNOWN
 if nodeList.getLength == 0
-    version = 'UKNOWN';
-
-    % Report success
+    
+    % Warn user that this may be a REALLY OLD archive
     if exist('Event', 'file') == 2
-        Event('Archive version could not be identified', 'WARN');
+        Event(['BuildVersion could not be found, checking for ', ...
+            'DatabaseVersion'], 'INFO');
     end
     
+    % Declare a new xpath search expression.  Search for BuildVersion
+    expression = ...
+        xpath.compile('//DatabaseVersion');
+
+    % Retrieve the results
+    nodeList = expression.evaluate(doc, XPathConstants.NODESET);
+    
+    % If no build version was found, return UNKNOWN
+    if nodeList.getLength > 0
+    
+        % Retrieve a handle to the results
+        node = nodeList.item(0);
+
+        % Store version as char
+        version = char(node.getFirstChild.getNodeValue);
+    end
+        
 % Otherwise, parse version
 else
     
@@ -79,16 +99,24 @@ else
     
     % Store version as char
     version = char(node.getFirstChild.getNodeValue);
-    
-    % Report success
-    if exist('Event', 'file') == 2
-        Event(sprintf('Archive version identified as %s in %0.3f seconds', ...
-            version, toc));
-    end
 end
 
 % Clear temporary variables
 clear node nodeList expression doc factory xpath;
+
+% Log result
+if ~strcmp(version, 'UNKNOWN')
+    if exist('Event', 'file') == 2
+        Event(sprintf('Archive version identified as %s in %0.3f seconds', ...
+            version, toc));
+    end
+else
+    if exist('Event', 'file') == 2
+        Event('Archive version could not be identified', 'WARN');
+    else
+        warning('Archive version could not be identified');
+    end
+end
 
 % Catch errors, log, and rethrow
 catch err
