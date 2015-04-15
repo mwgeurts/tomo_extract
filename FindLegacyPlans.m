@@ -102,7 +102,7 @@ for i = 1:nodeList.getLength
     subnode = subnodeList.item(0);
     
     % Otherwise, if plan state is not PLANNED, continue
-    if strcmp(char(subnode.getFirstChild.getNodeValue), 'PLANNED') == 0
+    if ~strcmpi(char(subnode.getFirstChild.getNodeValue), 'PLANNED')
         continue
     end
     
@@ -125,7 +125,7 @@ for i = 1:nodeList.getLength
 
         % Otherwise, if approved plan delivery type is not equal to the 
         % provided type, continue
-        if ~strcmp(char(subnode.getFirstChild.getNodeValue), varargin{3})
+        if ~strcmpi(char(subnode.getFirstChild.getNodeValue), varargin{3})
             continue
         end
     end
@@ -145,7 +145,7 @@ for i = 1:nodeList.getLength
     subnode = subnodeList.item(0);
     
     % Otherwise, if plan type is not PATIENT, continue
-    if ~strcmp(char(subnode.getFirstChild.getNodeValue), 'PATIENT')
+    if ~strcmpi(char(subnode.getFirstChild.getNodeValue), 'PATIENT')
         continue
     end
     

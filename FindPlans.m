@@ -78,7 +78,8 @@ plans = cell(1, nodeList.getLength);
 
 % Log number of delivery plans found
 if exist('Event', 'file') == 2
-    Event(sprintf('%i plans found', nodeList.getLength));
+    Event(sprintf('%i plans found, now searching for approval status', ...
+        nodeList.getLength));
 end
 
 % Loop through the deliveryPlanDataArrays
