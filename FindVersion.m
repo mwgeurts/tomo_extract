@@ -1,19 +1,21 @@
-function version = FindVersion(path, name)
-% FindVersion extracts the TomoTherapy build version from the patient
-% archive specified in the input arguments and returns it as a string.
+function [build, db] = FindVersion(path, name)
+% FindVersion extracts the TomoTherapy build and database versions from the 
+% patient archive specified in the input arguments and returns them as a 
+% string.
 %
 % The following variables are required for proper execution: 
 %   path: path to the patient archive XML file
 %   name: name of patient XML file in path
 %
 % The following variable is returned upon succesful completion:
-%   version: string containing the archive build version
+%   build: string containing the archive build version
+%   db: string containing the archive database version
 %
 % Below is an example of how this function is used:
 %
 %   path = '/path/to/archive/';
 %   name = 'Anon_0001_patient.xml';
-%   version = FindVersion(path, name);
+%   [build, db] = FindVersion(path, name);
 %
 % Author: Mark Geurts, mark.w.geurts@gmail.com
 % Copyright (C) 2015 University of Wisconsin Board of Regents
@@ -40,8 +42,9 @@ if exist('Event', 'file') == 2
     tic;
 end
 
-% Initialize return variable
-version = 'UNKNOWN';
+% Initialize return variables
+build = '';
+db = '';
 
 % The patient XML is parsed using xpath class
 import javax.xml.xpath.*
@@ -65,56 +68,49 @@ expression = ...
 % Retrieve the results
 nodeList = expression.evaluate(doc, XPathConstants.NODESET);
 
-% If no build version was found, return UNKNOWN
-if nodeList.getLength == 0
-    
-    % Warn user that this may be a REALLY OLD archive
-    if exist('Event', 'file') == 2
-        Event(['BuildVersion could not be found, checking for ', ...
-            'DatabaseVersion'], 'INFO');
-    end
-    
-    % Declare a new xpath search expression.  Search for BuildVersion
-    expression = ...
-        xpath.compile('//DatabaseVersion');
-
-    % Retrieve the results
-    nodeList = expression.evaluate(doc, XPathConstants.NODESET);
-    
-    % If no build version was found, return UNKNOWN
-    if nodeList.getLength > 0
-    
-        % Retrieve a handle to the results
-        node = nodeList.item(0);
-
-        % Store version as char
-        version = char(node.getFirstChild.getNodeValue);
-    end
-        
-% Otherwise, parse version
-else
+% If a build version was found
+if nodeList.getLength > 0
     
     % Retrieve a handle to the results
     node = nodeList.item(0);
     
     % Store version as char
-    version = char(node.getFirstChild.getNodeValue);
+    build = char(node.getFirstChild.getNodeValue);
+    
+end
+
+% Declare a new xpath search expression.  Search for DatabaseVersion
+expression = ...
+    xpath.compile('//DatabaseVersion');
+
+% Retrieve the results
+nodeList = expression.evaluate(doc, XPathConstants.NODESET);
+
+% If a database version was found
+if nodeList.getLength > 0
+    
+    % Retrieve a handle to the results
+    node = nodeList.item(0);
+    
+    % Store version as char
+    build = char(node.getFirstChild.getNodeValue);
+    
 end
 
 % Clear temporary variables
 clear node nodeList expression doc factory xpath;
 
 % Log result
-if ~strcmp(version, 'UNKNOWN')
+if ~strcmp(db, '')
     if exist('Event', 'file') == 2
-        Event(sprintf('Archive version identified as %s in %0.3f seconds', ...
-            version, toc));
+        Event(sprintf(['Archive database version identified as %s in ', ...
+            '%0.3f seconds'], version, toc));
     end
 else
     if exist('Event', 'file') == 2
-        Event('Archive version could not be identified', 'WARN');
+        Event('Archive database version could not be identified', 'WARN');
     else
-        warning('Archive version could not be identified');
+        warning('Archive database version could not be identified');
     end
 end
 
