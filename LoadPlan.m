@@ -102,7 +102,7 @@ expression = ...
 % Evaluate xpath expression and retrieve the results
 nodeList = expression.evaluate(doc, XPathConstants.NODESET);
 
-% If a UID was found
+% If a patient ID was found
 if nodeList.getLength > 0
 
     % Store the first returned value
