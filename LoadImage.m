@@ -312,6 +312,37 @@ for i = 1:nodeList.getLength
         image.couchInsertionPosition = ...
             char(subnode.getFirstChild.getNodeValue);
     end
+    
+    %% Load plan date/time
+    % Search for plan modification date
+    subexpression = ...
+        xpath.compile('plan/briefPlan/modificationTimestamp/date');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+    
+    % Store the plan date
+    d = char(subnode.getFirstChild.getNodeValue);
+    
+    % Search for plan modification time
+    subexpression = ...
+        xpath.compile('plan/briefPlan/modificationTimestamp/time');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+    
+    % Store the plan time
+    t = char(subnode.getFirstChild.getNodeValue);
+    
+    % Store the date and time as a timestamp
+    image.timestamp = datetime([d,'-',t], 'InputFormat', ...
+        'yyyyMMdd-hhmmss');
 
     %% Load associated plan trial
     % Search for procedure XML object approvedPlanTrialUID
@@ -665,7 +696,7 @@ fclose(fid);
 
 % Clear temporary variables
 clear fid i j node subnode subsubnode nodeList subnodeList subsubnodeList ...
-    expression subexpression subsubexpression doc factory xpath;
+    expression subexpression subsubexpression doc factory xpath d t;
 
 % Log conclusion of image loading
 if exist('Event', 'file') == 2

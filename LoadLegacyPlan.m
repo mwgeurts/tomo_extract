@@ -213,6 +213,36 @@ for i = 1:nodeList.getLength
         planData.planDescription = char(subnode.getFirstChild.getNodeValue);
     end
     
+    % Search for plan modification date
+    subexpression = ...
+        xpath.compile('plan/briefPlan/modificationTimestamp/date');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+    
+    % Store the plan date
+    d = char(subnode.getFirstChild.getNodeValue);
+    
+    % Search for plan modification time
+    subexpression = ...
+        xpath.compile('plan/briefPlan/modificationTimestamp/time');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+    
+    % Store the plan time
+    t = char(subnode.getFirstChild.getNodeValue);
+    
+    % Store the date and time as a timestamp
+    planData.timestamp = datetime([d,'-',t], 'InputFormat', ...
+        'yyyyMMdd-hhmmss');
+    
     % Search for plan delivery type
     subexpression = xpath.compile('plan/intendedTableMotion');
 
