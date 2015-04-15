@@ -214,7 +214,7 @@ for i = 1:nodeList.getLength
     end
     
     % Search for plan delivery type
-    subexpression = xpath.compile('intendedTableMotion');
+    subexpression = xpath.compile('plan/intendedTableMotion');
 
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
