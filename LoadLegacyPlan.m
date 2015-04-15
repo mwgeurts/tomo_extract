@@ -213,6 +213,23 @@ for i = 1:nodeList.getLength
         planData.planDescription = char(subnode.getFirstChild.getNodeValue);
     end
     
+    % Search for plan delivery type
+    subexpression = xpath.compile('intendedTableMotion');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If plan delivery type was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+    
+    % Store the plan delivery type
+    planData.planType = char(subnode.getFirstChild.getNodeValue);
+    
     % Search for approver user name
     subexpression = xpath.compile('plan/briefPlan/approvingUserName');
 
