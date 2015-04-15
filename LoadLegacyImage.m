@@ -57,6 +57,9 @@ factory = XPathFactory.newInstance;
 % Initialize a new xpath to the variable xpath
 xpath = factory.newXPath;
 
+% Store class UID
+image.classUID = '1.2.840.10008.5.1.4.1.1.2';
+
 %% Load patient demographics
 % Search for patient XML object patientName
 expression = ...
