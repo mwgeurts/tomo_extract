@@ -76,7 +76,6 @@ if nodeList.getLength > 0
     
     % Store version as char
     build = char(node.getFirstChild.getNodeValue);
-    
 end
 
 % Declare a new xpath search expression.  Search for DatabaseVersion
@@ -93,8 +92,7 @@ if nodeList.getLength > 0
     node = nodeList.item(0);
     
     % Store version as char
-    build = char(node.getFirstChild.getNodeValue);
-    
+    db = char(node.getFirstChild.getNodeValue);
 end
 
 % Clear temporary variables
