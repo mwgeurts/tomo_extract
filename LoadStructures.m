@@ -149,11 +149,11 @@ for i = 1:nodeList.getLength
                 break;
             end
         end
+        
+        % Clear temporary variables
+        clear in ex;
     end
-    
-    % Clear temporary variables
-    clear in ex;
-    
+
     % If the load flag is still set to true
     if load
         
