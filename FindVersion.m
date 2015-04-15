@@ -102,7 +102,7 @@ clear node nodeList expression doc factory xpath;
 if ~strcmp(db, '')
     if exist('Event', 'file') == 2
         Event(sprintf(['Archive database version identified as %s in ', ...
-            '%0.3f seconds'], version, toc));
+            '%0.3f seconds'], db, toc));
     end
 else
     if exist('Event', 'file') == 2
