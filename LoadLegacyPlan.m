@@ -128,7 +128,7 @@ if nodeList.getLength > 0
     if ~isempty(subnode.getFirstChild)
         
         % Set patient birth date
-        image.patientBirthDate = ...
+        planData.patientBirthDate = ...
             char(subnode.getFirstChild.getNodeValue);
     end
 end
