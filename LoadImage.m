@@ -120,9 +120,13 @@ if nodeList.getLength > 0
     % Store the first returned value
     subnode = nodeList.item(0);
     
-    % Set patient birth date
-    image.patientBirthDate = ...
-        char(subnode.getFirstChild.getNodeValue);
+    % If birthdate is not empty
+    if ~isempty(subnode.getFirstChild)
+        
+        % Set patient birth date
+        image.patientBirthDate = ...
+            char(subnode.getFirstChild.getNodeValue);
+    end
 end
 
 % Search for patient XML object patientGender
