@@ -217,6 +217,22 @@ for i = 1:nodeList.getLength
         planData.planDescription = char(subnode.getFirstChild.getNodeValue);
     end
     
+    % Search for approvingUserName
+    subexpression = xpath.compile('plan/briefPlan/approvingUserName');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a result was retrieved
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the approvingUserName
+        planData.approver = char(subnode.getFirstChild.getNodeValue);
+    end
+    
     % Search for plan modification date
     subexpression = ...
         xpath.compile('plan/briefPlan/modificationTimestamp/date');
@@ -390,7 +406,7 @@ for i = 1:nodeList.getLength
     if subnodeList.getLength > 0
 
         % Store the number of fractions
-        planData.backJaw = subnodeList.getLength;
+        planData.fractions = subnodeList.getLength;
     end
     
     % Search for setup to ready distance
