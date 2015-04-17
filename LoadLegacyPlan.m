@@ -293,7 +293,7 @@ for i = 1:nodeList.getLength
         subnode = subnodeList.item(0);
 
         % Store the approver user name
-        planData.approvedBy = char(subnode.getFirstChild.getNodeValue);
+        planData.approver = char(subnode.getFirstChild.getNodeValue);
     end
     
     % Search for prescribed dose
