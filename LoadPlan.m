@@ -255,6 +255,22 @@ for i = 1:nodeList.getLength
     % Store the plan delivery type
     planData.planType = char(subnode.getFirstChild.getNodeValue);
     
+    % Search for approvingUserName
+    subexpression = xpath.compile('approvingUserName');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a result was retrieved
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the approvingUserName
+        planData.approver = char(subnode.getFirstChild.getNodeValue);
+    end
+    
     % Stop searching, as the plan trial UID was found
     break;
 end
@@ -376,6 +392,83 @@ if ~isfield(planData, 'fluenceUID')
         error(['A current fluence delivery plan for plan UID %s was ', ...
             'not found in %s'], planUID, name);
     end
+end
+
+%% Search for archive fractionation result
+if exist('Event', 'file') == 2
+    Event('Searching for fractionation result');
+end
+
+% Search for fluence delivery plan associated with the plan trial
+expression = xpath.compile(['//fullPlanTrialArray/fullPlanTrialArray/', ...
+    'archiveFractionationResult']);
+
+% Evaluate xpath expression and retrieve the results
+nodeList = expression.evaluate(doc, XPathConstants.NODESET);  
+
+% Loop through the archiveFractionationResults
+for i = 1:nodeList.getLength
+    
+    % Retrieve a handle to this fractionation result
+    node = nodeList.item(i-1);
+
+    % Search for fractionation result parent UID
+    subexpression = xpath.compile('dbInfo/databaseParent');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no database parent was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+    
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+    
+    % If the fractionation result databaseParent UID does not match the 
+    % plan trial's UID, this optimization result is associated with a 
+    % different plan, so continue to next result
+    if strcmp(char(subnode.getFirstChild.getNodeValue), ...
+            planData.planTrialUID) == 0
+        continue
+    end
+    
+    % Search for current flag
+    subexpression = xpath.compile('isFinalDoseVolumeCurrent');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no current flag was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+    
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+    
+    % If the fractionation result is not current, continue to next result
+    if strcmp(char(subnode.getFirstChild.getNodeValue), 'true') == 0
+        continue
+    end
+    
+    % Search for number of fractions
+    subexpression = xpath.compile(['machineSpecificDeliveryPlanSets/',
+        'machineSpecificDeliveryPlanSets']);
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If the fraction number was found
+    if subnodeList.getLength > 0
+
+        % Store the number of fractions
+        planData.fractions = subnodeList.getLength;
+    end
+    
+    % Stop searching, as the fluence plan UID was found
+    break;
 end
 
 %% Load Fluence Delivery Plan
@@ -967,7 +1060,7 @@ planData.events{k,3} = 1.7976931348623157E308;
 % Sort events by tau
 planData.events = sortrows(planData.events);
 
-%% Load fluence delivery plan
+%% Load fluence sinogram
 % Log start of sinogram load
 if exist('Event', 'file') == 2
     Event(sprintf('Loading delivery plan binary data from %s', ...
