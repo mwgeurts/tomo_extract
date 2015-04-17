@@ -309,7 +309,7 @@ for i = 1:nodeList.getLength
         subnode = subnodeList.item(0);
 
         % Store the prescribed dose
-        planData.rxDose = char(subnode.getFirstChild.getNodeValue);
+        planData.rxDose = str2double(subnode.getFirstChild.getNodeValue);
     end
     
     % Search for prescribed volume
@@ -325,7 +325,7 @@ for i = 1:nodeList.getLength
         subnode = subnodeList.item(0);
 
         % Store the prescribed volume
-        planData.rxVolume = char(subnode.getFirstChild.getNodeValue);
+        planData.rxVolume = str2double(subnode.getFirstChild.getNodeValue);
     end
     
     % Search for front jaw
@@ -360,6 +360,42 @@ for i = 1:nodeList.getLength
 
         % Store the back jaw
         planData.backJaw = str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for front field
+    subexpression = ...
+        xpath.compile('plan/plannedJawFieldSpec/fieldSize/frontField');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a front field was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the front field
+        planData.frontField = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for back field
+    subexpression = ...
+        xpath.compile('plan/plannedJawFieldSpec/fieldSize/backField');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a back field was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the back field
+        planData.backField = ...
+            str2double(subnode.getFirstChild.getNodeValue);
     end
     
     % Search for pitch
