@@ -394,26 +394,26 @@ if ~isfield(planData, 'fluenceUID')
     end
 end
 
-%% Search for archive fractionation result
+%% Search for delivery review
 if exist('Event', 'file') == 2
-    Event('Searching for fractionation result');
+    Event('Searching for delivery review');
 end
 
-% Search for fluence delivery plan associated with the plan trial
-expression = xpath.compile(['//fullPlanTrialArray/fullPlanTrialArray/', ...
-    'archiveFractionationResult']);
+% Search for delivery review associated with the plan
+expression = xpath.compile(['//fullDeliveryReviewDataArray/', ...
+    'fullDeliveryReviewDataArray']);
 
 % Evaluate xpath expression and retrieve the results
 nodeList = expression.evaluate(doc, XPathConstants.NODESET);  
 
-% Loop through the archiveFractionationResults
+% Loop through the fullDeliveryReviewDataArrays
 for i = 1:nodeList.getLength
     
-    % Retrieve a handle to this fractionation result
+    % Retrieve a handle to this delivery review
     node = nodeList.item(i-1);
 
-    % Search for fractionation result parent UID
-    subexpression = xpath.compile('dbInfo/databaseParent');
+    % Search for delivery review parent UID
+    subexpression = xpath.compile('deliveryReview/dbInfo/databaseParent');
 
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
@@ -426,36 +426,96 @@ for i = 1:nodeList.getLength
     % Retrieve a handle to the results
     subnode = subnodeList.item(0);
     
-    % If the fractionation result databaseParent UID does not match the 
-    % plan trial's UID, this optimization result is associated with a 
-    % different plan, so continue to next result
-    if strcmp(char(subnode.getFirstChild.getNodeValue), ...
-            planData.planTrialUID) == 0
+    % If the delivery review databaseParent UID does not match the plan
+    % UID, this delivery review is associated with a different plan, so 
+    % continue to next result
+    if strcmp(char(subnode.getFirstChild.getNodeValue), planUID) == 0
         continue
     end
     
-    % Search for current flag
-    subexpression = xpath.compile('isFinalDoseVolumeCurrent');
+    % Search for machine name
+    subexpression = xpath.compile('deliveryReview/dbInfo/machineName');
 
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
-    % If no current flag was found, continue to next result
-    if subnodeList.getLength == 0
-        continue
+    % If the machine name was found
+    if subnodeList.getLength > 0
+
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+    
+        % Store the machine name
+        planData.machine = char(subnode.getFirstChild.getNodeValue);
     end
     
-    % Retrieve a handle to the results
-    subnode = subnodeList.item(0);
+    % Search for machine UID
+    subexpression = xpath.compile('deliveryReview/dbInfo/machineUID');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If the machine UID was found
+    if subnodeList.getLength > 0
+
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
     
-    % If the fractionation result is not current, continue to next result
-    if strcmp(char(subnode.getFirstChild.getNodeValue), 'true') == 0
-        continue
+        % Store the machine UID
+        planData.machineUID = char(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for JAM UID
+    subexpression = xpath.compile('deliveryReview/dbInfo/jamUID');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If the JAM was found
+    if subnodeList.getLength > 0
+
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+    
+        % Store the JAM
+        planData.jamUID = char(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for AOM UID
+    subexpression = xpath.compile('deliveryReview/dbInfo/aomUID');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If the AOM was found
+    if subnodeList.getLength > 0
+
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+    
+        % Store the AOM
+        planData.aomUID = char(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for calibration UID
+    subexpression = xpath.compile('deliveryReview/dbInfo/calibrationUID');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If the calibration was found
+    if subnodeList.getLength > 0
+
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+    
+        % Store the calibration
+        planData.calibrationUID = char(subnode.getFirstChild.getNodeValue);
     end
     
     % Search for number of fractions
-    subexpression = xpath.compile(['machineSpecificDeliveryPlanSets/',
-        'machineSpecificDeliveryPlanSets']);
+    subexpression = xpath.compile(['fullFractionApprovalDataArray/fullFra', ...
+        'ctionApprovalDataArray/fractionApproval/procDeliveryPlanUID']);
 
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
@@ -465,6 +525,13 @@ for i = 1:nodeList.getLength
 
         % Store the number of fractions
         planData.fractions = subnodeList.getLength;
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+    
+        % Store first specific delivery plan UID (note, this assumes that
+        % all delivery plans are identical)
+        planData.specificUID = char(subnode.getFirstChild.getNodeValue);
     end
     
     % Stop searching, as the fluence plan UID was found
