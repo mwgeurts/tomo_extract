@@ -429,7 +429,8 @@ for i = 1:nodeList.getLength
     % If the planSectionList databaseParent UID does not match this plan's
     % trial UID, this planSectionList is associated with a different plan,
     % so continue to next result
-    if strcmp(char(subnode.getFirstChild.getNodeValue), planTrialUID) == 0
+    if strcmp(char(subnode.getFirstChild.getNodeValue), ...
+            planData.planTrialUID) == 0
         continue
     end
     
