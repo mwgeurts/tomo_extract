@@ -165,6 +165,7 @@ for i = 1:nodeList.getLength
     % Retrieve a handle to this delivery plan
     node = nodeList.item(i-1);
 
+    %% Verify UID
     % Search for plan database UID
     subexpression = xpath.compile('dbInfo/databaseUID');
 
@@ -186,6 +187,7 @@ for i = 1:nodeList.getLength
         continue
     end
     
+    %% Store plan trial UID
     % Search for approved plan trial UID
     subexpression = xpath.compile('approvedPlanTrialUID');
 
@@ -203,6 +205,7 @@ for i = 1:nodeList.getLength
     % Store the plan trial UID
     planData.planTrialUID = char(subnode.getFirstChild.getNodeValue);
     
+    %% Store plan label
     % Search for plan label
     subexpression = xpath.compile('planLabel');
 
@@ -215,6 +218,25 @@ for i = 1:nodeList.getLength
     % Store the plan label
     planData.planLabel = char(subnode.getFirstChild.getNodeValue);
     
+    %% Load patient position
+    % Search for procedure XML object patientPosition
+    subexpression = xpath.compile('patientPosition');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a patient position was found
+    if subnodeList.getLength > 0
+        
+        % Store the first returned value
+        subnode = subnodeList.item(0);
+
+        % Save patient position to return structure as char array
+        planData.position = ...
+            char(subnode.getFirstChild.getNodeValue);
+    end
+    
+    %% Store plan date/time
     % Search for plan modification date
     subexpression = xpath.compile('modificationTimestamp/date');
 
@@ -243,6 +265,7 @@ for i = 1:nodeList.getLength
     planData.timestamp = datetime([d,'-',t], 'InputFormat', ...
         'yyyyMMdd-HHmmss');
     
+    %% Store plan type
     % Search for plan delivery type
     subexpression = xpath.compile('planDeliveryType');
 
@@ -255,6 +278,7 @@ for i = 1:nodeList.getLength
     % Store the plan delivery type
     planData.planType = char(subnode.getFirstChild.getNodeValue);
     
+    %% Store approver
     % Search for approvingUserName
     subexpression = xpath.compile('approvingUserName');
 
@@ -304,6 +328,7 @@ for i = 1:nodeList.getLength
     % Retrieve a handle to this optimization result
     node = nodeList.item(i-1);
 
+    %% Verify parent UID
     % Search for optimization result parent UID
     subexpression = xpath.compile('dbInfo/databaseParent');
 
@@ -326,6 +351,7 @@ for i = 1:nodeList.getLength
         continue
     end
     
+    %% Verify optimization result is current
     % Search for current flag
     subexpression = xpath.compile('isFluenceDeliveryPlanCurrent');
 
@@ -345,6 +371,7 @@ for i = 1:nodeList.getLength
         continue
     end
     
+    %% Store fluence UID
     % Search for fluence delivery plan UID
     subexpression = xpath.compile('fluenceDeliveryPlanUID');
 
@@ -412,6 +439,7 @@ for i = 1:nodeList.getLength
     % Retrieve a handle to this planSectionList
     node = nodeList.item(i-1);
 
+    %% Verify plan section parent UID
     % Search for plan section parent UID
     subexpression = xpath.compile('dbInfo/databaseParent');
 
@@ -434,6 +462,7 @@ for i = 1:nodeList.getLength
         continue
     end
     
+    %% Store jaw positions
     % Search for front jaw
     subexpression = ...
         xpath.compile('intendedJawFieldSpec/jawWidth/frontJaw');
@@ -468,6 +497,7 @@ for i = 1:nodeList.getLength
         planData.backJaw = str2double(subnode.getFirstChild.getNodeValue);
     end
     
+    %% Store field positions
     % Search for front field
     subexpression = ...
         xpath.compile('intendedJawFieldSpec/fieldSize/frontField');
@@ -504,6 +534,7 @@ for i = 1:nodeList.getLength
             str2double(subnode.getFirstChild.getNodeValue);
     end
     
+    %% Store pitch
     % Search for pitch
     subexpression = ...
         xpath.compile('planSectionDetail/helicalSection/pitch');
@@ -521,7 +552,8 @@ for i = 1:nodeList.getLength
         planData.pitch = str2double(subnode.getFirstChild.getNodeValue);
     end
     
-    % Search for beam angles (TomoDirect)
+    %% Store TomoDirect angles
+    % Search for beam angles
     subexpression = xpath.compile(['planSectionDetail/fixedAngleSection/', ...
         'beamAngleList/beamAngleList']);
 
@@ -621,6 +653,7 @@ for i = 1:nodeList.getLength
     % Retrieve a handle to this patientPlanTrial
     node = nodeList.item(i-1);
 
+    %% Verify optimization result UID
     % Search for optimization result parent UID
     subexpression = xpath.compile('dbInfo/databaseUID');
 
@@ -643,6 +676,7 @@ for i = 1:nodeList.getLength
         continue
     end
     
+    %% Store number of fractions
     % Search for desiredFractionCount
     subexpression = xpath.compile('desiredFractionCount');
 
@@ -660,23 +694,7 @@ for i = 1:nodeList.getLength
             str2double(subnode.getFirstChild.getNodeValue);
     end
     
-    % Search for optimization dose calculation grid
-    subexpression = xpath.compile('optimizationDoseGrid');
-
-    % Evaluate xpath expression and retrieve the results
-    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
-
-    % If a calc grid was found
-    if subnodeList.getLength > 0
-        
-        % Retrieve a handle to the results
-        subnode = subnodeList.item(0);
-
-        % Store the calc grid
-        planData.optimizationCalcGrid = ...
-            char(subnode.getFirstChild.getNodeValue);
-    end
-    
+    %% Store laser positions
     % Search for X laser position
     subexpression = xpath.compile('movableLaserPosition/x');
 
@@ -727,6 +745,24 @@ for i = 1:nodeList.getLength
         planData.movableLaser(3) = ...
             str2double(subnode.getFirstChild.getNodeValue);
     end
+    
+    %% Store calc grids
+    % Search for optimization dose calculation grid
+    subexpression = xpath.compile('optimizationDoseGrid');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a calc grid was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the calc grid
+        planData.optimizationCalcGrid = ...
+            char(subnode.getFirstChild.getNodeValue);
+    end
    
     % Search for final dose calculation grid
     subexpression = xpath.compile('finalDoseCalculationGrid');
@@ -745,6 +781,7 @@ for i = 1:nodeList.getLength
             char(subnode.getFirstChild.getNodeValue);
     end
     
+    %% Store prescription
     % Search for prescription type
     subexpression = xpath.compile('prescription/prescriptionType');
 
@@ -793,6 +830,7 @@ for i = 1:nodeList.getLength
         planData.rxVolume = str2double(subnode.getFirstChild.getNodeValue);
     end
     
+    %% Store modulation factor
     % Search for modulation factor
     subexpression = xpath.compile('planningModulationFactor');
 
@@ -833,6 +871,7 @@ for i = 1:nodeList.getLength
     % Retrieve a handle to this delivery review
     node = nodeList.item(i-1);
 
+    %% Verify delivery review parent UID
     % Search for delivery review parent UID
     subexpression = xpath.compile('deliveryReview/dbInfo/databaseParent');
 
@@ -854,8 +893,9 @@ for i = 1:nodeList.getLength
         continue
     end
     
+    %% Store machine name
     % Search for machine name
-    subexpression = xpath.compile('deliveryReview/dbInfo/machineName');
+    subexpression = xpath.compile('deliveryReview/machineName');
 
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
@@ -871,7 +911,7 @@ for i = 1:nodeList.getLength
     end
     
     % Search for machine UID
-    subexpression = xpath.compile('deliveryReview/dbInfo/machineUID');
+    subexpression = xpath.compile('deliveryReview/machineUID');
 
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
@@ -886,8 +926,9 @@ for i = 1:nodeList.getLength
         planData.machineUID = char(subnode.getFirstChild.getNodeValue);
     end
     
+    %% Store JAM/AOM/Cal UIDs
     % Search for JAM UID
-    subexpression = xpath.compile('deliveryReview/dbInfo/jamUID');
+    subexpression = xpath.compile('deliveryReview/jamUID');
 
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
@@ -903,7 +944,7 @@ for i = 1:nodeList.getLength
     end
     
     % Search for AOM UID
-    subexpression = xpath.compile('deliveryReview/dbInfo/aomUID');
+    subexpression = xpath.compile('deliveryReview/aomUID');
 
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
@@ -919,7 +960,7 @@ for i = 1:nodeList.getLength
     end
     
     % Search for calibration UID
-    subexpression = xpath.compile('deliveryReview/dbInfo/calibrationUID');
+    subexpression = xpath.compile('deliveryReview/calibrationUID');
 
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
@@ -934,6 +975,7 @@ for i = 1:nodeList.getLength
         planData.calibrationUID = char(subnode.getFirstChild.getNodeValue);
     end
     
+    %% Store machine specific delivery plan UID
     % Search for number of machine specific procedure UID
     subexpression = xpath.compile(['fullFractionApprovalDataArray/fullFra', ...
         'ctionApprovalDataArray/fractionApproval/procDeliveryPlanUID']);
@@ -971,10 +1013,10 @@ nodeList = expression.evaluate(doc, XPathConstants.NODESET);
 % Loop through the deliveryPlanDataArrays
 for i = 1:nodeList.getLength
     
-    %% Load delivery plan basics 
     % Retrieve a handle to this delivery plan
     node = nodeList.item(i-1);
 
+    %% Verify delivery plan UID
     % Search for delivery plan UID
     subexpression = xpath.compile('deliveryPlan/dbInfo/databaseUID');
 
@@ -997,6 +1039,7 @@ for i = 1:nodeList.getLength
         continue
     end
 
+    %% Verify this is a fluence delivery plan
     % Search for delivery plan purpose
     subexpression = xpath.compile('deliveryPlan/purpose');
 
@@ -1643,7 +1686,7 @@ for i = 1:nodeList.getLength
     % Retrieve a handle to this delivery plan
     node = nodeList.item(i-1);
 
-    %% Load delivery plan basics 
+    %% Verify delivery plan UID
     % Search for delivery plan parent UID
     subexpression = xpath.compile('deliveryPlan/dbInfo/databaseParent');
 
@@ -1666,6 +1709,7 @@ for i = 1:nodeList.getLength
         continue
     end
 
+    %% Verify delivery plan is machine agnostic
     % Search for delivery plan purpose
     subexpression = xpath.compile('deliveryPlan/purpose');
 
