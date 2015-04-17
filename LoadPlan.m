@@ -394,6 +394,426 @@ if ~isfield(planData, 'fluenceUID')
     end
 end
 
+%% Search for plan section list
+if exist('Event', 'file') == 2
+    Event('Searching for plan section list');
+end
+
+% Search for delivery review associated with the plan
+expression = xpath.compile(['//fullPlanTrialArray/fullPlanTrialArray/', ...
+    'planSectionList/planSectionList']);
+
+% Evaluate xpath expression and retrieve the results
+nodeList = expression.evaluate(doc, XPathConstants.NODESET);  
+
+% Loop through the planSectionLists
+for i = 1:nodeList.getLength
+    
+    % Retrieve a handle to this planSectionList
+    node = nodeList.item(i-1);
+
+    % Search for plan section parent UID
+    subexpression = xpath.compile('dbInfo/databaseParent');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no database parent was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+    
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+    
+    % If the planSectionList databaseParent UID does not match this plan's
+    % trial UID, this planSectionList is associated with a different plan,
+    % so continue to next result
+    if strcmp(char(subnode.getFirstChild.getNodeValue), planTrialUID) == 0
+        continue
+    end
+    
+    % Search for front jaw
+    subexpression = ...
+        xpath.compile('intendedJawFieldSpec/jawWidth/frontJaw');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a front jaw was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the front jaw
+        planData.frontJaw = str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for back jaw
+    subexpression = ...
+        xpath.compile('intendedJawFieldSpec/jawWidth/backJaw');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a back jaw was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the back jaw
+        planData.backJaw = str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for front field
+    subexpression = ...
+        xpath.compile('intendedJawFieldSpec/fieldSize/frontField');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a front field was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the front field
+        planData.frontField = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for back field
+    subexpression = ...
+        xpath.compile('intendedJawFieldSpec/fieldSize/backField');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a back field was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the back field
+        planData.backField = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for pitch
+    subexpression = ...
+        xpath.compile('planSectionDetail/helicalSection/pitch');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a pitch was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the pitch
+        planData.pitch = str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for beam angles (TomoDirect)
+    subexpression = xpath.compile(['planSectionDetail/fixedAngleSection/', ...
+        'beamAngleList/beamAngleList']);
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If beam angles were found
+    if subnodeList.getLength > 0
+        
+        % Initialize beam angles cell array
+        planData.beamAngles = cell(subnodeList.getLength, 1);
+        
+        % Loop through beam angles
+        for j = 1:subnodeList.getLength
+            
+            % Retrieve a handle to this result
+            subnode = subnodeList.item(j-1);
+
+            % Search for the name of this beam angle
+            subsubexpression = xpath.compile('name');
+
+            % Evaluate xpath expression and retrieve the results
+            subsubnodeList = ...
+                subsubexpression.evaluate(subnode, XPathConstants.NODESET);
+            
+            % Store the first returned value
+            subsubnode = subsubnodeList.item(0);
+
+            % Store the name value to the beam angles cell array
+            planData.beamAngles{j}.name = ...
+                char(subsubnode.getFirstChild.getNodeValue);
+            
+            % Search for the angle of this beam angle
+            subsubexpression = xpath.compile('angle');
+
+            % Evaluate xpath expression and retrieve the results
+            subsubnodeList = ...
+                subsubexpression.evaluate(subnode, XPathConstants.NODESET);
+            
+            % Store the first returned value
+            subsubnode = subsubnodeList.item(0);
+
+            % Store the angle value to the beam angles cell array
+            planData.beamAngles{j}.angle = ...
+                str2double(subsubnode.getFirstChild.getNodeValue);
+            
+            % Search for the positive flash of this beam angle
+            subsubexpression = xpath.compile('positiveFlash');
+
+            % Evaluate xpath expression and retrieve the results
+            subsubnodeList = ...
+                subsubexpression.evaluate(subnode, XPathConstants.NODESET);
+            
+            % Store the first returned value
+            subsubnode = subsubnodeList.item(0);
+
+            % Store the positive flash value to the beam angles cell array
+            planData.beamAngles{j}.positiveFlash = ...
+                str2double(subsubnode.getFirstChild.getNodeValue);
+            
+            % Search for the negative flash of this beam angle
+            subsubexpression = xpath.compile('negativeFlash');
+
+            % Evaluate xpath expression and retrieve the results
+            subsubnodeList = ...
+                subsubexpression.evaluate(subnode, XPathConstants.NODESET);
+            
+            % Store the first returned value
+            subsubnode = subsubnodeList.item(0);
+
+            % Store the negative flash value to the beam angles cell array
+            planData.beamAngles{j}.negativeFlash = ...
+                str2double(subsubnode.getFirstChild.getNodeValue);
+            
+        end
+    end
+    
+    % Stop searching, as the plan section was found
+    break;
+end
+
+%% Search for patient plan trial
+if exist('Event', 'file') == 2
+    Event('Searching for patient plan trial');
+end
+
+% Search for fluence delivery plan associated with the plan trial
+expression = xpath.compile(['//fullPlanTrialArray/fullPlanTrialArray/', ...
+    'patientPlanTrial']);
+
+% Evaluate xpath expression and retrieve the results
+nodeList = expression.evaluate(doc, XPathConstants.NODESET);  
+
+% Loop through the patientPlanTrials
+for i = 1:nodeList.getLength
+    
+    % Retrieve a handle to this patientPlanTrial
+    node = nodeList.item(i-1);
+
+    % Search for optimization result parent UID
+    subexpression = xpath.compile('dbInfo/databaseUID');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no database UID was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+    
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+    
+    % If the patientPlanTrial database UID does not match the plan
+    % trial's UID, this patientPlanTrial is associated with a different
+    % plan, so continue to next result
+    if strcmp(char(subnode.getFirstChild.getNodeValue), ...
+            planData.planTrialUID) == 0
+        continue
+    end
+    
+    % Search for desiredFractionCount
+    subexpression = xpath.compile('desiredFractionCount');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If the desiredFractionCount was found
+    if subnodeList.getLength > 0
+
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+    
+        % Store the desiredFractionCount
+        planData.fractions = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for optimization dose calculation grid
+    subexpression = xpath.compile('optimizationDoseGrid');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a calc grid was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the calc grid
+        planData.optimizationCalcGrid = ...
+            char(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for X laser position
+    subexpression = xpath.compile('movableLaserPosition/x');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a laser position was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the laser position
+        planData.movableLaser(1) = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for Y laser position
+    subexpression = xpath.compile('movableLaserPosition/y');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a laser position was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the laser position
+        planData.movableLaser(2) = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for X laser position
+    subexpression = xpath.compile('movableLaserPosition/z');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a laser position was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the laser position
+        planData.movableLaser(3) = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
+   
+    % Search for final dose calculation grid
+    subexpression = xpath.compile('finalDoseCalculationGrid');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a calc grid was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the calc grid
+        planData.calcGrid = ...
+            char(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for prescription type
+    subexpression = xpath.compile('prescription/prescriptionType');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a prescribed dose was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the prescribed type
+        planData.rxType = char(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for prescribed dose
+    subexpression = xpath.compile('prescription/prescribedDose');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a prescribed dose was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the prescribed dose
+        planData.rxDose = str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
+     % Search for prescribed volume
+    subexpression = xpath.compile('prescription/volumePercentage');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a prescribed volume was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the prescribed volume
+        planData.rxVolume = str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for modulation factor
+    subexpression = xpath.compile('planningModulationFactor');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If a modulation factor was found
+    if subnodeList.getLength > 0
+        
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the modulation factor
+        planData.modFactor = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
+    
+    % Stop searching, as the plan trial was found
+    break;
+end
+
 %% Search for delivery review
 if exist('Event', 'file') == 2
     Event('Searching for delivery review');
@@ -513,19 +933,16 @@ for i = 1:nodeList.getLength
         planData.calibrationUID = char(subnode.getFirstChild.getNodeValue);
     end
     
-    % Search for number of fractions
+    % Search for number of machine specific procedure UID
     subexpression = xpath.compile(['fullFractionApprovalDataArray/fullFra', ...
         'ctionApprovalDataArray/fractionApproval/procDeliveryPlanUID']);
 
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
-    % If the fraction number was found
+    % If the procedure was found
     if subnodeList.getLength > 0
 
-        % Store the number of fractions
-        planData.fractions = subnodeList.getLength;
-        
         % Retrieve a handle to the results
         subnode = subnodeList.item(0);
     
