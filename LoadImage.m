@@ -348,8 +348,7 @@ for i = 1:nodeList.getLength
     t = char(subnode.getFirstChild.getNodeValue);
     
     % Store the date and time as a timestamp
-    image.timestamp = datetime([d,'-',t], 'InputFormat', ...
-        'yyyyMMdd-HHmmss');
+    image.timestamp = datenum([d,'-',t], 'yyyymmdd-HHMMSS');
 
     %% Load associated plan trial
     % Search for procedure XML object approvedPlanTrialUID
