@@ -262,8 +262,7 @@ for i = 1:nodeList.getLength
     t = char(subnode.getFirstChild.getNodeValue);
     
     % Store the date and time as a timestamp
-    planData.timestamp = datetime([d,'-',t], 'InputFormat', ...
-        'yyyyMMdd-HHmmss');
+    planData.timestamp = datenum([d,'-',t], 'yyyymmdd-HHMMSS');
     
     %% Store plan type
     % Search for plan delivery type
