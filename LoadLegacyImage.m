@@ -239,8 +239,7 @@ for i = 1:nodeList.getLength
     t = char(subnode.getFirstChild.getNodeValue);
     
     % Store the date and time as a timestamp
-    image.timestamp = datetime([d,'-',t], 'InputFormat', ...
-        'yyyyMMdd-HHmmss');
+    image.timestamp = datenum([d,'-',t], 'yyyymmdd-HHMMSS');
     
     %% Load structure set UID
     % Search for procedure XML object planStructureSet databaseUID
