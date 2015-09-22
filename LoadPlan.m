@@ -301,7 +301,7 @@ end
 
 % If no plan trial UID was found, stop
 if ~isfield(planData, 'planTrialUID')
-    if ~ismember(varargin, 'noerrormsg')
+    if ~ismember('noerrormsg', varargin)
         return
     elseif exist('Event', 'file') == 2 
         Event(sprintf(['An approved plan trial UID for plan UID %s was ', ...
@@ -414,7 +414,7 @@ end
 
 % If not plan trial UID was found, stop
 if ~isfield(planData, 'fluenceUID')
-    if ~ismember(varargin, 'noerrormsg')
+    if ~ismember('noerrormsg', varargin)
         return
     elseif exist('Event', 'file') == 2
         Event(sprintf(['A current fluence delivery plan for plan UID %s ', ...
@@ -1862,7 +1862,7 @@ clear fid i j node subnode subsubnode nodeList subnodeList subsubnodeList ...
 
 % Catch errors, log, and rethrow
 catch err
-    if ~ismember(varargin, 'noerrormsg')
+    if ~ismember('noerrormsg', varargin)
         return
     elseif exist('Event', 'file') == 2
         Event(getReport(err, 'extended', 'hyperlinks', 'off'), 'ERROR');
