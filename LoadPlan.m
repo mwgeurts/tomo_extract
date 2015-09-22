@@ -1,4 +1,4 @@
-function planData = LoadPlan(path, name, planUID)
+function planData = LoadPlan(path, name, planUID, varargin)
 % LoadPlan loads the delivery plan from a specified TomoTherapy patient 
 % archive and plan trial UID.  This data can be used to perform dose 
 % calculation via CalcDose. This function has currently been validated 
@@ -8,6 +8,7 @@ function planData = LoadPlan(path, name, planUID)
 %   path: path to the patient archive XML file
 %   name: name of patient XML file in path
 %   planUID: UID of the plan
+%   varargin: optional flags, such as 'noerrormsg' 
 %
 % The following variables are returned upon succesful completion:
 %   planData: delivery plan data including scale, tau, lower leaf index,
@@ -301,7 +302,9 @@ end
 
 % If no plan trial UID was found, stop
 if ~isfield(planData, 'planTrialUID')
-    if exist('Event', 'file') == 2
+    if ~ismember(varargin, 'noerrormsg')
+        return
+    elseif exist('Event', 'file') == 2 
         Event(sprintf(['An approved plan trial UID for plan UID %s was ', ...
             'not found in %s'], planUID, name), 'ERROR');
     else
@@ -412,7 +415,9 @@ end
 
 % If not plan trial UID was found, stop
 if ~isfield(planData, 'fluenceUID')
-    if exist('Event', 'file') == 2
+    if ~ismember(varargin, 'noerrormsg')
+        return
+    elseif exist('Event', 'file') == 2
         Event(sprintf(['A current fluence delivery plan for plan UID %s ', ...
             'was not found in %s'], planUID, name), 'ERROR');
     else
@@ -1858,7 +1863,9 @@ clear fid i j node subnode subsubnode nodeList subnodeList subsubnodeList ...
 
 % Catch errors, log, and rethrow
 catch err
-    if exist('Event', 'file') == 2
+    if ~ismember(varargin, 'noerrormsg')
+        return
+    elseif exist('Event', 'file') == 2
         Event(getReport(err, 'extended', 'hyperlinks', 'off'), 'ERROR');
     else
         rethrow(err);
