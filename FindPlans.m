@@ -103,7 +103,9 @@ for i = 1:nodeList.getLength
     subnode = subnodeList.item(0);
     
     % Otherwise, if approved plan trial UID is empty, continue
-    if strcmp(char(subnode.getFirstChild.getNodeValue), '')
+    if strcmp(char(subnode.getFirstChild.getNodeValue), '') || ...
+            strcmp(char(subnode.getFirstChild.getNodeValue), ...
+            '* * * DO NOT CHANGE THIS STRING VALUE * * *')
         continue
     end
     
