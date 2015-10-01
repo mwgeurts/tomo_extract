@@ -203,6 +203,12 @@ for i = 1:nodeList.getLength
     % Otherwise, retrieve a handle to the results
     subnode = subnodeList.item(0);
     
+    % If plan trial UID is empty, continue to next result
+    if strcmp(char(subnode.getFirstChild.getNodeValue), ...
+            '* * * DO NOT CHANGE THIS STRING VALUE * * *')
+        continue
+    end
+    
     % Store the plan trial UID
     planData.planTrialUID = char(subnode.getFirstChild.getNodeValue);
     
