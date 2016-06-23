@@ -495,9 +495,11 @@ for i = 1:nodeList.getLength
         % Store the first returned value
         subsubnode = subsubnodeList.item(0);
 
-        % If this image is not a KVCT image, continue to next subnode
+        % If this image is not a KVCT/Adapt image, continue to next subnode
         if strcmp(char(subsubnode.getFirstChild.getNodeValue), ...
-                'KVCT') == 0
+                'KVCT') == 0 && ...
+                strcmp(char(subsubnode.getFirstChild.getNodeValue), ...
+                'Registered_MVCT') == 0
             continue
         end
 
