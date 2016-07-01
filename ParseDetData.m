@@ -118,7 +118,7 @@ for i = 1:data.views
 end
 
 % Compute cone (dose2/dose1)
-data.cone = dose2 ./ dose1;
+data.cone = data.dose2 ./ data.dose1;
 
 % Close file handle
 fclose(fid);
