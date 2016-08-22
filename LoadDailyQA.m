@@ -60,8 +60,8 @@ function dailyqa = LoadDailyQA(path, name, numberOfProjections, openRows, ...
 % Initialize the channelGold, which stores the "expected" MVCT 
 % detector channel response for an open beam.  This data was derived
 % from the TP+1 beam model 5 cm (J42) gold standard transverse beam
-% profile.  channelGold must be the same dimension as the number of
-% MVCT detector channels defined above in the variable rows
+% profile. ChannelGold should ideally be the same dimension as the number
+% of MVCT detector channels defined above in the variable rows
 dailyqa.channelGold = [45.8720005199238,47.8498858353154,49.3011672921640,...
     50.3242948531514,51.0175530883297,51.4790615222934,51.8067749804769,...
     52.0983353861669,52.4185240086528,52.7584859210780,53.0997677536684,...
@@ -579,7 +579,7 @@ while 1
     pks = dailyqa.oddLeaves(peaks);
     
     % Identify minimum values
-    [~, mins] = min([pks(del) ; pks([false del])]); 
+    [~, mins] = min([pks(del) ; pks([false; del])]); 
     
     % Find indices of non-zero values
     deln = find(del);
@@ -628,7 +628,7 @@ while 1
     pks = dailyqa.evenLeaves(peaks);
     
     % Identify minima
-    [~,mins] = min([pks(del) ; pks([false del])]); 
+    [~,mins] = min([pks(del) ; pks([false; del])]); 
     
     % Find indices of non-zero values
     deln = find(del);
@@ -666,6 +666,15 @@ end
 % used
 meas = mean(dailyqa.rawData(:,1000:2000),2)';
 
+% If the size differs between the raw data and gold data
+if length(meas) ~= length(dailyqa.channelGold)
+    
+    % Resample the gold data to match the measured channels
+    dailyqa.channelGold = interp1(1:length(dailyqa.channelGold), ...
+        dailyqa.channelGold, [1:length(dailyqa.channelGold)/length(meas):...
+        length(dailyqa.channelGold) length(dailyqa.channelGold)]);
+end
+
 % If goldShift is set to 1, find best agreement by shifting gold data
 if shiftGold == 1
     
@@ -678,8 +687,9 @@ if shiftGold == 1
     maxcorr = 0;
     shift = 0;
     
-    % Loop through +/- 2 channel shifts
+    % Loop through +/- 4 channel shifts
     for i = -4:4
+        
         % Compute correlation coefficient
         c = corr2(meas, circshift(dailyqa.channelGold, [0 i]));
         
