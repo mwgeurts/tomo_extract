@@ -94,6 +94,11 @@ function dose = CalcDose(varargin)
 % connection for subsequent calculations
 persistent calcdose folder remotefolder modelfolder image sadose ssh2;
 
+% Define server parameters (if using remote calculation server)
+server = '144.92.219.35';
+user = 'tomo';
+pass = 'hi-art';
+
 % If dose calculation capability has not yet been determined 
 if ~exist('calcdose', 'var') || isempty(calcdose)
     
@@ -169,7 +174,7 @@ if ~exist('calcdose', 'var') || isempty(calcdose)
             if exist('Event', 'file') == 2
                 Event('Connecting to tomo-research via SSH2');
             end
-            ssh2 = ssh2_config('tomo-research', 'tomo', 'hi-art');
+            ssh2 = ssh2_config(server, user, pass);
 
             % Test the SSH2 connection.  If this fails, catch the error 
             % below.
