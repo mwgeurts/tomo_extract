@@ -10,14 +10,18 @@ function dose = CalcDose(varargin)
 % the README for more infomation). 
 %
 % To change the connection information for the remote computation server,
-% edit the following line in the code below.  The first argument is the
-% server DNS name (or IP address), while the second and third are the
-% username and password, respectively.  This user account must have SSH 
-% access rights, rights to execute sadose/gpusadose, and finally read/write 
-% access to the temp directory. Note, this function assumes that the remote
-% computation server is unix-based.
+% create a file named config.txt in the working directory with the 
+% following content: 
 %
-%   ssh2 = ssh2_config('tomo-research', 'tomo', 'hi-art');
+%   REMOTE_CALC_SERVER = tomo-research
+%   REMOTE_CALC_USER = username
+%   REMOTE_CALC_PASS = password
+%
+% The first argument is the server DNS name (or IP address), while the 
+% second and third are the username and password, respectively.  This user 
+% account must have SSH access rights, rights to execute sadose/gpusadose, 
+% and finally read/write access to the temp directory. Note, this function 
+% assumes that the remote computation server is unix-based.
 %
 % Following execution, the CT image, folder, and SSH connection variables
 % are persisted, such that CalcDose may be executed again with only a new
@@ -94,11 +98,6 @@ function dose = CalcDose(varargin)
 % connection for subsequent calculations
 persistent calcdose folder remotefolder modelfolder image sadose ssh2;
 
-% Define server parameters (if using remote calculation server)
-server = '144.92.219.35';
-user = 'tomo';
-pass = 'hi-art';
-
 % If dose calculation capability has not yet been determined 
 if ~exist('calcdose', 'var') || isempty(calcdose)
     
@@ -141,6 +140,44 @@ if ~exist('calcdose', 'var') || isempty(calcdose)
                 'check for remote computation server'], 'WARN');
         end
         
+        % Load configuration settings
+        % Open file handle to config.txt file
+        fid = fopen('config.txt', 'r');
+        
+        % Verify that file handle is valid
+        if fid < 3
+            
+            % If not, throw an error
+            if exist('Event', 'file') == 2
+                Event(['The config.txt file could not be opened. Verify that this ', ...
+                    'file exists in the working directory. See documentation for ', ...
+                    'more information.'], 'ERROR');
+            else
+                error(['The config.txt file could not be opened. Verify that this ', ...
+                    'file exists in the working directory. See documentation for ', ...
+                    'more information.']);
+            end
+        end
+        
+        % Scan config file contents
+        c = textscan(fid, '%s', 'Delimiter', '=');
+        
+        % Close file handle
+        fclose(fid);
+        
+        % Loop through textscan array, separating key/value pairs into array
+        for i = 1:2:length(c{1})
+            config.(strtrim(c{1}{i})) = strtrim(c{1}{i+1});
+        end
+        
+        % Clear temporary variables
+        clear c i fid;
+        
+        % Log completion
+        if exist('Event', 'file') == 2
+            Event('Loaded config.txt parameters');
+        end
+        
         % A try/catch statement is used in case Ganymed-SSH2 or the remote 
         % calculation server is not available
         try
@@ -172,9 +209,11 @@ if ~exist('calcdose', 'var') || isempty(calcdose)
             % read/write access, respectively.  See the README for more 
             % infomation
             if exist('Event', 'file') == 2
-                Event('Connecting to tomo-research via SSH2');
+                Event(['Connecting to ', config.REMOTE_CALC_SERVER, ...
+                    ' via SSH2']);
             end
-            ssh2 = ssh2_config(server, user, pass);
+            ssh2 = ssh2_config(config.REMOTE_CALC_SERVER, ...
+                config.REMOTE_CALC_USER, config.REMOTE_CALC_PASS);
 
             % Test the SSH2 connection.  If this fails, catch the error 
             % below.
