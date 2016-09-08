@@ -379,7 +379,7 @@ case 'TomoMachine'
     end
     
     % Clear temporary xpath variables
-    clear fid i j doc factory path expression subexpression node ...
+    clear fid i j doc factory expression subexpression node ...
         nodeList subnode subnodeList date timestamp machineList;
     
 % Otherwise, an incorrect type was passed    
