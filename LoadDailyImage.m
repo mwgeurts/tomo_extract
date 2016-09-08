@@ -57,8 +57,9 @@ case 'ARCHIVE'
         % If a patient XML file was found
         if size(list,1) > 0
             
-            % Parse all registered MVCTs from the archive using FindMVCTs
-            sets = FindMVCTs(varargin{1}, list(1).name);
+            % Parse all registered MVCTs from the archive using
+            % FindMVCTScans
+            sets = FindMVCTScans(varargin{1}, list(1).name);
         else
             
             % Otherwise, throw an error was a patient XML was not found
