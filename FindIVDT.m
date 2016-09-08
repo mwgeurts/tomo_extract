@@ -182,7 +182,7 @@ case 'MVCT'
     end
     
     % Clear temporary xpath variables
-    clear fid i j doc factory path expression subexpression node ...
+    clear fid i j doc factory expression subexpression node ...
         nodeList subnode subnodeList machineList;
     
 % Otherwise, if type is TomoPlan
