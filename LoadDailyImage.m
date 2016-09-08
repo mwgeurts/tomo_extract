@@ -19,7 +19,8 @@ function image = LoadDailyImage(varargin)
 %   dailyImage: structure containing the machine, image type (MVCT), UID, 
 %       date/time, binary data, dimensions, start coordinates, voxel size, 
 %       FOV, and (if type is 'ARCHIVE') accepted registration adjustments,
-%       plan UID, and machineCalibration (for loading IVDT)
+%       plan UID, machineCalibration (for loading IVDT), and patient 
+%       demographics
 %
 % Copyright (C) 2016 University of Wisconsin Board of Regents
 %
@@ -867,9 +868,13 @@ case 'ARCHIVE'
         image.dimensions(2) * image.dimensions(3), 'uint16'), ...
         image.dimensions(1), image.dimensions(2), ...
         image.dimensions(3)));
-
+    
     % Close file handle
     fclose(fid);
+    
+    % Compute field of view from smaller of x/y widths
+    image.FOV = min(image.width(1) * image.dimensions(1), ...
+        image.width(2) * image.dimensions(2)); % cm
 
     % Clear temporary variables
     clear fid i j node subnode subsubnode nodeList subnodeList subsubnodeList ...
