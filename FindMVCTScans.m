@@ -6,8 +6,7 @@ function scans = FindMVCTScans(path, name)
 %
 % The following variables are required for proper execution: 
 %   path: string containing the path to the patient archive XML file
-%   name: string cont
-aining the name of patient XML file in path
+%   name: string containing the name of patient XML file in path
 %
 % The following variable is returned upon succesful completion:
 %   scans: cell array of structures for each plan, with each structure
