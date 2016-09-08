@@ -433,11 +433,6 @@ for i = 1:nodeList.getLength
         continue;
     end
     
-    % Initialize empty scan length and date/time
-    scans{plan}.scanLengths(k, :) = [0 0];
-    scans{plan}.date{k} = '';
-    scans{plan}.time{k} = '';
-    
     % Search for scheduledStartDateTime date
     subexpression = xpath.compile(['procedure/briefProcedure/', ...
         'scheduledStartDateTime/date']);
@@ -452,7 +447,7 @@ for i = 1:nodeList.getLength
         subnode = subnodeList.item(0);
 
         % Store procedure date
-        scans{plan}.date{k} = char(subnode.getFirstChild.getNodeValue);
+        d = char(subnode.getFirstChild.getNodeValue);
     end
     
     % Search for scheduledStartDateTime time
@@ -469,8 +464,11 @@ for i = 1:nodeList.getLength
         subnode = subnodeList.item(0);
 
         % Store procedure date
-        scans{plan}.time{k} = char(subnode.getFirstChild.getNodeValue);
+        t = char(subnode.getFirstChild.getNodeValue);
     end
+    
+    % Store the date and time as a timestamp
+    image.timestamp = datenum([d,'-',t], 'yyyymmdd-HHMMSS');
     
     % Search for machine calibration UID
     subexpression = ...
@@ -483,7 +481,7 @@ for i = 1:nodeList.getLength
     subnode = subnodeList.item(0);
     
     % Store machine calibration UID
-    scans{plan}.machineCalibration{k} = ...
+    image.machineCalibration = ...
         char(subnode.getFirstChild.getNodeValue);
     
     % Search for scanList
@@ -531,9 +529,9 @@ for i = 1:nodeList.getLength
     end
     
     % Update start and stop scan lengths
-    scans{plan}.scanLengths(k, 1) = ...
+    image.scanLength(1) = ...
         str2double(subnodeList.item(start).getFirstChild.getNodeValue);
-    scans{plan}.scanLengths(k, 2) = ...
+    image.scanLength(2) = ...
         str2double(subnodeList.item(stop).getFirstChild.getNodeValue);
     
     % Search for image data
@@ -798,7 +796,25 @@ for i = 1:nodeList.getLength
     % Break the loop, as the MVCT was found
     break;
 end
+
+% If a machine calibration UID does not exist
+if ~isfield(image, 'machineCalibration')
     
+    % Load the IVDT information using MVCT mode
+    image.ivdt = FindIVDT(varargin{1}, image.machineCalibration, 'MVCT');
+    
+else
+    
+    % Throw a warning
+    if exist('Event', 'file') == 2
+        Event(sprintf(['An associated machine calibration was not found ', ...
+            'for UID %s; an IVDT was therefore not loaded'], varargin{4}), 'WARN');
+    else
+        warning(['An associated machine calibration was not found ', ...
+            'for UID %s; an IVDT was therefore not loaded'], varargin{4});
+    end
+end
+
 % If a filename does not exist
 if ~isfield(image, 'filename')
     
