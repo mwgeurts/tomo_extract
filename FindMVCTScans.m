@@ -6,7 +6,8 @@ function scans = FindMVCTScans(path, name)
 %
 % The following variables are required for proper execution: 
 %   path: string containing the path to the patient archive XML file
-%   name: string containing the name of patient XML file in path
+%   name: string cont
+aining the name of patient XML file in path
 %
 % The following variable is returned upon succesful completion:
 %   scans: cell array of structures for each plan, with each structure
@@ -555,7 +556,7 @@ for i = 1:nodeList.getLength
     end
     
     % Store the registration
-    scans{plan}.registration(k, 1) = ...
+    scans{plan}.registration(k, 4) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
     % Search for registration Y
@@ -571,7 +572,7 @@ for i = 1:nodeList.getLength
     end
     
     % Store the registration
-    scans{plan}.registration(k, 2) = ...
+    scans{plan}.registration(k, 5) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
     % Search for registration Z
@@ -587,7 +588,7 @@ for i = 1:nodeList.getLength
     end
     
     % Store the registration
-    scans{plan}.registration(k, 3) = ...
+    scans{plan}.registration(k, 6) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
     % Search for registration pitch
@@ -603,7 +604,7 @@ for i = 1:nodeList.getLength
     end
     
     % Store the registration
-    scans{plan}.registration(k, 4) = ...
+    scans{plan}.registration(k, 1) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
     % Search for registration yaw
@@ -619,7 +620,7 @@ for i = 1:nodeList.getLength
     end
     
     % Store the registration
-    scans{plan}.registration(k, 5) = ...
+    scans{plan}.registration(k, 2) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
     % Search for registration roll
@@ -635,7 +636,7 @@ for i = 1:nodeList.getLength
     end
     
     % Store the registration
-    scans{plan}.registration(k, 6) = ...
+    scans{plan}.registration(k, 3) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 end
 

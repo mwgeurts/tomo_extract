@@ -482,7 +482,7 @@ case 'ARCHIVE'
         end
 
         % Store the registration
-        image.registration(1) = ...
+        image.registration(4) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
         % Search for registration Y
@@ -498,7 +498,7 @@ case 'ARCHIVE'
         end
 
         % Store the registration
-        image.registration(2) = ...
+        image.registration(5) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
         % Search for registration Z
@@ -514,7 +514,7 @@ case 'ARCHIVE'
         end
 
         % Store the registration
-        image.registration(3) = ...
+        image.registration(6) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
         % Search for registration pitch
@@ -530,7 +530,7 @@ case 'ARCHIVE'
         end
 
         % Store the registration
-        image.registration(4) = ...
+        image.registration(1) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
         % Search for registration yaw
@@ -546,7 +546,7 @@ case 'ARCHIVE'
         end
 
         % Store the registration
-        image.registration(5) = ...
+        image.registration(2) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
         % Search for registration roll
@@ -562,7 +562,7 @@ case 'ARCHIVE'
         end
 
         % Store the registration
-        image.registration(6) = ...
+        image.registration(3) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
         % Break the loop, as the MVCT was found
