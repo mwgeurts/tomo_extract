@@ -73,8 +73,8 @@ case 'ARCHIVE'
     % Otherwise, a patient XML file was provided in varargin{3}
     else
         
-        % Parse all registered MVCTs from the archive using FindMVCTs
-        sets = FindMVCTs(varargin{1}, varargin{3});
+        % Parse all registered MVCTs from the archive using FindMVCTScans
+        sets = FindMVCTScans(varargin{1}, varargin{3});
     end
     
     %% Select which dataset to load
