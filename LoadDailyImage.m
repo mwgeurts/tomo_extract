@@ -183,7 +183,7 @@ case 'ARCHIVE'
         subnode = subnodeList.item(0);
 
         % Verify procedure UID matches provided, otherwise continue
-        if ~strcmp(char(subnode.getFirstChild.getNodeValue), varargin{3})
+        if ~strcmp(char(subnode.getFirstChild.getNodeValue), varargin{4})
             continue;
         end
         
