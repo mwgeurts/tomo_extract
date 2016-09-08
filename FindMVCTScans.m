@@ -11,8 +11,8 @@ function scans = FindMVCTScans(path, name)
 % The following variable is returned upon succesful completion:
 %   scans: cell array of structures for each plan, with each structure
 %       containing the following fields: planUID, planName, scanUIDs, date,
-%       time, scanLengths, imageFiles, imageDim, imageStart, imageSize, and
-%       registration
+%       time, scanLengths, imageFiles, imageDim, imageStart, imageSize, 
+%       machineCalibration, and registration
 %
 % Below is an example of how this function is used:
 %
@@ -277,7 +277,7 @@ for i = 1:nodeList.getLength
     k = length(scans{plan}.scanUIDs)+1;
     scans{plan}.scanUIDs{k} = char(subnode.getFirstChild.getNodeValue);
     
-        % Initialize empty scan length and date/time
+    % Initialize empty scan length and date/time
     scans{plan}.scanLengths(k, :) = [0 0];
     scans{plan}.date{k} = '';
     scans{plan}.time{k} = '';
@@ -315,6 +315,20 @@ for i = 1:nodeList.getLength
         % Store procedure date
         scans{plan}.time{k} = char(subnode.getFirstChild.getNodeValue);
     end
+    
+    % Search for machine calibration UID
+    subexpression = ...
+        xpath.compile('procedure/scheduledProcedure/machineCalibration');
+    
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+    
+    % Store the first returned value
+    subnode = subnodeList.item(0);
+    
+    % Store machine calibration UID
+    scans{plan}.machineCalibration{k} = ...
+        char(subnode.getFirstChild.getNodeValue);
     
     % Search for scanList
     subexpression = xpath.compile(['procedure/scheduledProcedure/', ...
