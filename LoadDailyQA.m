@@ -732,14 +732,14 @@ end
 % relative to 15 nearby closed leaves.  15 is arbitrarily chosen.
 dailyqa.leafSpread = zeros(1,16);
 
-% Loop through leaves 33-18
+% Loop through leaves 26-10
 for i = 1:size(dailyqa.leafSpread,2)
 
-    % Read the MVCT signal for leaves 33 - 18 over projections 6225-6230  
-    % At this projection, leaf 33 is open, while leaves 32-18 are closed
+    % Read the MVCT signal for leaves 26 - 10 over projections 7196-7204  
+    % At this projection, leaf 26 is open, while leaves 25-10 are closed
     % Note leafSpread accounts for channel calibration
-    dailyqa.leafSpread(i) = mean(dailyqa.rawData(dailyqa.leafMap(34-i),...
-        6225:6230)) / dailyqa.channelCal(dailyqa.leafMap(34-i)) - ...
+    dailyqa.leafSpread(i) = mean(dailyqa.rawData(dailyqa.leafMap(26-i),...
+        7196:7204)) / dailyqa.channelCal(dailyqa.leafMap(26-i)) - ...
         dailyqa.background;
 end
 
