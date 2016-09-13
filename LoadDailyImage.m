@@ -499,7 +499,7 @@ case 'ARCHIVE'
         end
 
         % Store the registration
-        image.registration(5) = ...
+        image.registration(6) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
         % Search for registration Z
@@ -515,7 +515,7 @@ case 'ARCHIVE'
         end
 
         % Store the registration
-        image.registration(6) = ...
+        image.registration(5) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
         % Search for registration pitch
