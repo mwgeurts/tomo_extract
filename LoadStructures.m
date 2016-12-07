@@ -278,6 +278,22 @@ if exist('Event', 'file') == 2
         varargin{3}.structureSetUID));
 end
 
+% Apply image orientation rotation, if available (otherwise assume HFS)
+rot = [1,1,1];
+if isfield(varargin{3}, 'position')
+   
+    % Set rotation vector based on patient position
+    if strcmpi(varargin{3}.position, 'HFS')
+        rot = [1,1,1];
+    elseif strcmpi(varargin{3}.position, 'HFP')
+        rot = [-1,-1,1];
+    elseif strcmpi(varargin{3}.position, 'FFS')
+        rot = [-1,1,-1];
+    elseif strcmpi(varargin{3}.position, 'FFP')
+        rot = [1,-1,-1];
+    end
+end
+
 % Loop through the structures discovered
 for i = 1:n
     
@@ -331,9 +347,6 @@ for i = 1:n
             
             % Read in curve points
             points = str2num(subnode.getFirstChild.getNodeValue); %#ok<ST2NM>
-
-            % Store raw points 
-            structures{i}.points{j} = points;
             
             % Determine slice index by searching IEC-Y index using nearest
             % neighbor interpolation
@@ -373,6 +386,10 @@ for i = 1:n
                 Event(['Structure ', structures{i}.name, ...
                     ' contains contours outside of image array'], 'WARN');
             end
+
+            % Store raw points, applying rotation vector
+            structures{i}.points{j} = points .* ...
+                repmat(rot, size(points, 1), 1);
         end
     end
     
@@ -408,7 +425,7 @@ structures = structures(~cellfun('isempty', structures));
 
 % Clear temporary variables
 clear n doc factory xpath expression nodeList subNode numpoints points ...
-    slice mask;
+    slice mask rot;
 
 % Log completion of function
 if exist('Event', 'file') == 2
