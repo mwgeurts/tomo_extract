@@ -28,7 +28,7 @@ function ivdt = FindIVDT(path, id, type)
 %   ivdt = FindIVDT(path, id, 'TomoPlan');
 %
 % Author: Mark Geurts, mark.w.geurts@gmail.com
-% Copyright (C) 2015 University of Wisconsin Board of Regents
+% Copyright (C) 2016 University of Wisconsin Board of Regents
 %
 % This program is free software: you can redistribute it and/or modify it 
 % under the terms of the GNU General Public License as published by the  
@@ -153,27 +153,36 @@ case 'MVCT'
                 % Search for calibration UID
                 subexpression = ...
                     xpath.compile('defaultImagingEquipmentUID');
-                if exist('Event', 'file') == 2
-                    Event(sprintf('Found calibration data UID %s', id));
-                end
+                
 
                 % Evaluate xpath expression and retrieve the results
                 subnodeList = subexpression.evaluate(node, ...
                     XPathConstants.NODESET);
-                subnode = subnodeList.item(0);
-    
-                % Set imagingUID to the defaultImagingEquipmentUID XML
-                % parameter value
-                imagingUID = char(subnode.getFirstChild.getNodeValue);
                 
-                % Log the imagingUID
-                if exist('Event', 'file') == 2
-                    Event(sprintf('Set imaging equipment UID to %s', ...
-                        imagingUID));
+                % If the defaultImagingEquipmentUID is not empty
+                if subnodeList.getLength > 0
+                    
+                    % Log event
+                    if exist('Event', 'file') == 2
+                        Event(sprintf('Found calibration data UID %s', id));
+                    end
+                    
+                    % Retrieve value
+                    subnode = subnodeList.item(0);
+
+                    % Set imagingUID to the defaultImagingEquipmentUID XML
+                    % parameter value
+                    imagingUID = char(subnode.getFirstChild.getNodeValue);
+
+                    % Log the imagingUID
+                    if exist('Event', 'file') == 2
+                        Event(sprintf('Set imaging equipment UID to %s', ...
+                            imagingUID));
+                    end
+                
+                    % Since the correct IVDT was found, break the for loop
+                    break;  
                 end
-                
-                % Since the correct IVDT was found, break the for loop
-                break;    
             end
         end
         
@@ -394,9 +403,9 @@ end
 % If no matching imaging equipment was found, notify user
 if strcmp(imagingUID, '')
     if exist('Event', 'file') == 2
-        Event('An imaging equipment UID was not found', 'ERROR');
+        Event('An imaging equipment UID was not found', 'WARN');
     else
-        error('An imaging equipment UID was not found');
+        warning('An imaging equipment UID was not found');
     end
 end
 
@@ -454,7 +463,7 @@ for i = 1:size(ivdtlist,1)
 
     % If the UID does not match the deliveryPlan IVDT UID, this is not 
     % the correct imaging equipment, so continue to next result
-    if strcmp(char(node.getFirstChild.getNodeValue),imagingUID)
+    if strcmp(char(node.getFirstChild.getNodeValue), imagingUID)
         
         % Notify the user that a matching UID was found
         if exist('Event', 'file') == 2
@@ -587,4 +596,3 @@ end
     
 % Clear temporary variable
 clear imagingUID;
-
