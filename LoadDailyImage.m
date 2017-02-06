@@ -500,7 +500,7 @@ case 'ARCHIVE'
 
         % Store the registration
         image.registration(6) = ...
-            str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+            -str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
         % Search for registration Z
         subexpression = xpath.compile(['fullCorrelationDataArray/', ...
@@ -516,7 +516,7 @@ case 'ARCHIVE'
 
         % Store the registration
         image.registration(5) = ...
-            -str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+            str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
         % Search for registration pitch
         subexpression = xpath.compile(['fullCorrelationDataArray/', ...
