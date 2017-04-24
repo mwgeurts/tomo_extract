@@ -319,7 +319,7 @@ dose = CalcDose(image, modplan, modelfolder, 1);
 
 ### ParseDetData
 
-`ParseDetData()` is a function that exctracts the dose1, dose2, and detector data from a compressed TomoTherapy Detector Data file (detdata.dat). This function will display a progress bar while it loads (unless MATLAB was executed with the -nodisplay, -nodesktop, or -noFigureWindows flags). The following terminal commands are used to download the detector data file from the DRS following delivery:
+`ParseDetData()` is a function that extracts the dose1, dose2, and detector data from a compressed TomoTherapy Detector Data file (detdata.dat). This function will display a progress bar while it loads (unless MATLAB was executed with the -nodisplay, -nodesktop, or -noFigureWindows flags). The following terminal commands are used to download the detector data file from the DRS following delivery:
 
 ```
 ftp drs
