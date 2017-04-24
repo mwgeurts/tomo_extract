@@ -640,22 +640,7 @@ for i = 1:nodeList.getLength
             subsubnode = subsubnodeList.item(0);
 
             % Store the sinogram file name
-            planData.fluenceFilename = ...
-                fullfile(path, char(subsubnode.getFirstChild.getNodeValue));
-                
-            % Search for the sinogram filename
-            subsubexpression = ...
-                xpath.compile('arrayHeader/sinogramDataFile');
-
-            % Evaluate xpath expression and retrieve the results
-            subsubnodeList = ...
-                subsubexpression.evaluate(subnode, XPathConstants.NODESET);
-            
-            % Store the first returned value
-            subsubnode = subsubnodeList.item(0);
-
-            % Store the sinogram file name
-            planData.fluenceFilename = ...
+            planData.fluenceFilename{1} = ...
                 fullfile(path, char(subsubnode.getFirstChild.getNodeValue));
             
             % Search for the sinogram dimensions
@@ -670,17 +655,17 @@ for i = 1:nodeList.getLength
             subsubnode = subsubnodeList.item(0);
 
             % Store the first dimension as number of leaves
-            planData.numberOfLeaves = ...
+            planData.numberOfLeaves(1) = ...
                 str2double(subsubnode.getFirstChild.getNodeValue);
 
             % Retrieve a handle to the next result
             subsubnode = subsubnodeList.item(1);
 
             % Store the second dimension as number of projections
-            planData.numberOfProjections = ...
+            planData.numberOfProjections(1) = ...
                 str2double(subsubnode.getFirstChild.getNodeValue);
    
-             % Because the EOP sinogram was found, stop searching
+            % Because the EOP sinogram was found, stop searching
             break;
         end
     end
@@ -693,16 +678,16 @@ end
 % Log start of sinogram load
 if exist('Event', 'file') == 2
     Event(sprintf('Loading sinogram binary data from %s', ...
-        planData.fluenceFilename));
+        planData.fluenceFilename{1}));
 end
 
 % Open a read file handle to the sinogram binary array 
-fid = fopen(planData.fluenceFilename, 'r', 'b');
+fid = fopen(planData.fluenceFilename{1}, 'r', 'b');
 
 % Read the file in and reshape to a sinogram
-sinogram = reshape(fread(fid, planData.numberOfLeaves * ...
-    planData.numberOfProjections, 'single'), ...
-    planData.numberOfLeaves, planData.numberOfProjections);
+sinogram = reshape(fread(fid, planData.numberOfLeaves(1) * ...
+    planData.numberOfProjections(1), 'single'), ...
+    planData.numberOfLeaves(1), planData.numberOfProjections(1));
 
 % Close the sinogram file handle
 fclose(fid);
@@ -716,7 +701,7 @@ for i = 1:size(sinogram, 2)
     if max(sinogram(:,i)) > 0.01
 
         % Set startTrim to the current projection
-        planData.startTrim = i;
+        planData.startTrim(1) = i;
 
         % Stop looking for the first active projection
         break;
@@ -731,7 +716,7 @@ for i = size(sinogram,2):-1:1
     if max(sinogram(:,i)) > 0.01
 
         % Set stopTrim to the current projection
-        planData.stopTrim = i;
+        planData.stopTrim(1) = i;
 
         % Stop looking for the last active projection
         break;
@@ -740,7 +725,7 @@ end
 
 % Set the sinogram return variable to the start and stop trimmed
 % binary array
-planData.sinogram = sinogram(:, planData.startTrim:planData.stopTrim);
+planData.sinogram = sinogram(:, planData.startTrim(1):planData.stopTrim(1));
 
 %% Load machine specific sinogram
 % Declare a new xpath search expression.  Search for all procedures
@@ -841,7 +826,7 @@ for i = 1:nodeList.getLength
     subnode = subnodeList.item(0);
 
     % Store the sinogram file name
-    planData.specificFilename = ...
+    planData.specificFilename{1} = ...
         fullfile(path, char(subnode.getFirstChild.getNodeValue));
     
     % Search for the sinogram dimensions
@@ -855,14 +840,14 @@ for i = 1:nodeList.getLength
     subnode = subnodeList.item(0);
 
     % Store the first dimension as number of leaves
-    planData.specificNumberOfLeaves = ...
+    planData.specificNumberOfLeaves(1) = ...
         str2double(subnode.getFirstChild.getNodeValue);
     
     % Retrieve a handle to the next result
     subnode = subnodeList.item(1);
 
     % Store the second dimension as number of projections
-    planData.specificNumberOfProjections = ...
+    planData.specificNumberOfProjections(1) = ...
         str2double(subnode.getFirstChild.getNodeValue);
     
     % Because the matching specific sinogram was found, break the for loop 
@@ -874,16 +859,17 @@ end
 % Log start of sinogram load
 if exist('Event', 'file') == 2
     Event(sprintf('Loading sinogram binary data from %s', ...
-        planData.specificFilename));
+        planData.specificFilename{1}));
 end
 
 % Open a read file handle to the sinogram binary array 
-fid = fopen(planData.specificFilename, 'r', 'b');
+fid = fopen(planData.specificFilename{1}, 'r', 'b');
 
 % Read the file in and reshape to a sinogram
-planData.specific = reshape(fread(fid, planData.specificNumberOfLeaves * ...
-    planData.specificNumberOfProjections, 'single'), ...
-    planData.specificNumberOfLeaves, planData.specificNumberOfProjections);
+planData.specific = reshape(fread(fid, planData.specificNumberOfLeaves(1) * ...
+    planData.specificNumberOfProjections(1), 'single'), ...
+    planData.specificNumberOfLeaves(1), ...
+    planData.specificNumberOfProjections(1));
 
 % Close the sinogram file handle
 fclose(fid);
@@ -892,7 +878,7 @@ fclose(fid);
 % Report success
 if exist('Event', 'file') == 2
     Event(sprintf(['Plan data loaded successfully with %i projections ', ...
-        'in %0.3f seconds'], planData.numberOfProjections, toc));
+        'in %0.3f seconds'], planData.numberOfProjections(1), toc));
 end
 
 % Clear temporary variables

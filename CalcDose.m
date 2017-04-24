@@ -352,7 +352,7 @@ if nargin >= 2
     folder = tempname;
 
     % Use mkdir to attempt to create folder in temp directory
-    [status,cmdout] = system(['mkdir ', folder]);
+    [status, cmdout] = system(['mkdir ', folder]);
     
     % If status is 0, the command was successful; otherwise, log an
     % error
@@ -539,13 +539,13 @@ if nargin >= 2
     
     % If the local system is unix-based
     if isunix
-        [status, cmdout] = system(['cp ',fullfile(modelfolder, '*.*'), ...
-            ' ', folder, '/']);
+        [status, cmdout] = system(['cp ',replace(fullfile(modelfolder, ...
+            '*.*'), ' ', '\ '), ' ', folder, '/']);
 
     % Otherwise, if Windows
     elseif ispc
-        [status, cmdout] = system(['copy ',fullfile(modelfolder, '*.*'), ...
-            ' ', folder, '\']);
+        [status, cmdout] = system(['copy "',fullfile(modelfolder, '*.*'), ...
+            '" ', folder, '\']);
     end
     
     % If status is 0, cp was successful.  Otherwise, log error
@@ -685,14 +685,14 @@ for i = 0:63
     % If the leaf is below the lower leaf index, or above the upper
     % leaf index (defined by lower + number of leaves), there are no
     % open projections for this leaf, so write 0
-    if i < plan.lowerLeafIndex ...
-            || i >= plan.lowerLeafIndex + plan.numberOfLeaves
+    if i < min(plan.lowerLeafIndex) ...
+            || i >= max(plan.lowerLeafIndex + plan.numberOfLeaves)
         fprintf(fid, 'leaf.count.%02i=0\n', i);
 
     % Otherwise, write n, where n is the total number of projections in
     % the plan (note that a number of them may still be empty/zero)
     else
-        fprintf(fid, 'leaf.count.%02i=%i\n', [i plan.numberOfProjections]);
+        fprintf(fid, 'leaf.count.%02i=%i\n', [i plan.totalTau]);
     end
 end
 
@@ -711,8 +711,14 @@ if exist('Event', 'file') == 2
 end
 
 % Extend sinogram to full size given start and stopTrim
-sinogram = zeros(64, plan.numberOfProjections);
-sinogram(:, plan.startTrim:plan.stopTrim) = plan.sinogram;
+sinogram = zeros(64, plan.totalTau);
+trimmedLengths(2:(length(plan.numberOfProjections)+1)) = ...
+    plan.stopTrim - plan.startTrim;
+for i = 2:length(trimmedLengths)
+    sinogram(:, plan.startTrim(i-1):plan.stopTrim(i-1)) = ...
+        plan.sinogram(:,(sum(trimmedLengths(1:i-1))+1):...
+        (sum(trimmedLengths(1:i)))+1);
+end
 
 % Generate a temporary file on the local computer to store the
 % plan.header dose calculator input file.  Then open a write file 
@@ -721,8 +727,8 @@ fid = fopen(fullfile(folder, 'plan.img'), 'w', 'l');
 
 % Loop through each active leaf (defined by the lower and upper
 % indices, above)
-for i = plan.lowerLeafIndex + 1:plan.lowerLeafIndex + ...
-        plan.numberOfLeaves
+for i = min(plan.lowerLeafIndex) + 1:max(plan.lowerLeafIndex + ...
+        plan.numberOfLeaves)
 
     % Loop through the number of projections for this leaf
     for j = 1:size(sinogram, 2)
@@ -917,7 +923,7 @@ if fid >= 3
     % IEC-Y slice
     if downsample > 1
 
-        % Log interpolation stemp
+        % Log interpolation step
         if exist('Event', 'file') == 2
             Event(sprintf(['Upsampling calculated dose image by %i using ', ...
                 'nearest neighbor interpolation'], downsample));

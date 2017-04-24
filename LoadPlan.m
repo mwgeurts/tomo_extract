@@ -1099,7 +1099,26 @@ for i = 1:nodeList.getLength
     % Store the total tau value
     planData.totalTau = str2double(subnode.getFirstChild.getNodeValue);
 
-    %% Load lower lead index
+    %% Load starting tau
+    % Search for delivery plan lower leaf index
+    subexpression = ...
+        xpath.compile('deliveryPlan/states/states/tau');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+    
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
+    
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
+
+        % Store the starting tau value
+        planData.startTau(j) = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
+    %% Load lower leaf index
     % Search for delivery plan lower leaf index
     subexpression = ...
         xpath.compile('deliveryPlan/states/states/lowerLeafIndex');
@@ -1107,13 +1126,17 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
     
-    % Store the first returned value
-    subnode = subnodeList.item(0);
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
+    
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
 
-    % Store the lower leaf index value
-    planData.lowerLeafIndex = ...
-        str2double(subnode.getFirstChild.getNodeValue);
-
+        % Store the lower leaf index value
+        planData.lowerLeafIndex(j) = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
     %% Load number of projections
     % Search for delivery plan number of projections
     subexpression = ...
@@ -1122,13 +1145,17 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
     
-    % Store the first returned value
-    subnode = subnodeList.item(0);
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
+        
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
 
-    % Store the number of projections value
-    planData.numberOfProjections = ...
-        str2double(subnode.getFirstChild.getNodeValue);
-
+        % Store the number of projections value
+        planData.numberOfProjections(j) = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
     %% Load number of leaves
     % Search for delivery plan number of leaves
     subexpression = ...
@@ -1137,13 +1164,17 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
     
-    % Store the first returned value
-    subnode = subnodeList.item(0);
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
+        
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
 
-    % Store the number of leaves value
-    planData.numberOfLeaves = ...
-        str2double(subnode.getFirstChild.getNodeValue);
-
+        % Store the number of leaves value
+        planData.numberOfLeaves(j) = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
     %% Load gantry angle
     % Search for delivery plan gantry start angle
     subexpression = xpath.compile(['deliveryPlan/states/states/', ...
@@ -1153,11 +1184,11 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
-    % If a gantryPosition unsync action exists
-    if subnodeList.getLength > 0
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
         
-        % Retreieve a handle to the search result
-        subnode = subnodeList.item(0);
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
 
         % If the planData structure events cell array already exists
         if isfield(planData, 'events')
@@ -1172,7 +1203,7 @@ for i = 1:nodeList.getLength
         % Store the gantry start angle to the events cell array.  The
         % first cell is tau, the second is type, and the third is the
         % value.
-        planData.events{k,1} = 0;
+        planData.events{k,1} = planData.startTau(j);
         planData.events{k,2} = 'gantryAngle';
         planData.events{k,3} = ...
             str2double(subnode.getFirstChild.getNodeValue);
@@ -1187,11 +1218,11 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
-    % If a jaw front unsync action exists
-    if subnodeList.getLength > 0
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
         
-        % Retreieve a handle to the search result
-        subnode = subnodeList.item(0);
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
 
         % If the planData structure events cell array already exists
         if isfield(planData, 'events')
@@ -1206,7 +1237,7 @@ for i = 1:nodeList.getLength
         % Store the jaw front position to the events cell array.  The
         % first cell is tau, the second is type, and the third is the
         % value.
-        planData.events{k,1} = 0;
+        planData.events{k,1} = planData.startTau(j);
         planData.events{k,2} = 'jawFront';
         planData.events{k,3} = ...
             str2double(subnode.getFirstChild.getNodeValue);
@@ -1221,14 +1252,15 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
-    % If a jaw back unsync action exists
-    if subnodeList.getLength > 0
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
         
-        % Retreieve a handle to the search result
-        subnode = subnodeList.item(0);
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
 
         % If the planData structure events cell array already exists
         if isfield(planData, 'events')
+            
             % Set k to the next index
             k = size(planData.events, 1) + 1;
         else
@@ -1239,7 +1271,7 @@ for i = 1:nodeList.getLength
         % Store the jaw back position to the events cell array.  The
         % first cell is tau, the second is type, and the third is the
         % value.
-        planData.events{k,1} = 0;
+        planData.events{k,1} = planData.startTau(j);
         planData.events{k,2} = 'jawBack';
         planData.events{k,3} = ...
             str2double(subnode.getFirstChild.getNodeValue);
@@ -1254,11 +1286,11 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
-    % If an isocenter x position unsync action exists
-    if subnodeList.getLength > 0
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
         
-        % Retreieve a handle to the search result
-        subnode = subnodeList.item(0);
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
 
         % If the planData structure events cell array already exists
         if isfield(planData, 'events')
@@ -1273,7 +1305,7 @@ for i = 1:nodeList.getLength
         % Store the isocenter x position to the events cell array.  The
         % first cell is tau, the second is type, and the third is the
         % value.
-        planData.events{k,1} = 0;
+        planData.events{k,1} = planData.startTau(j);
         planData.events{k,2} = 'isoX';
         planData.events{k,3} = ...
             str2double(subnode.getFirstChild.getNodeValue);
@@ -1291,11 +1323,11 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
-    % If an isocenter y position unsync action exists
-    if subnodeList.getLength > 0
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
         
-        % Retreieve a handle to the search result
-        subnode = subnodeList.item(0);
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
 
         % If the planData structure events cell array already exists
         if isfield(planData, 'events')
@@ -1310,7 +1342,7 @@ for i = 1:nodeList.getLength
         % Store the isocenter y position to the events cell array.  The
         % first cell is tau, the second is type, and the third is the
         % value.
-        planData.events{k,1} = 0;
+        planData.events{k,1} = planData.startTau(j);
         planData.events{k,2} = 'isoY';
         planData.events{k,3} = ...
             str2double(subnode.getFirstChild.getNodeValue);
@@ -1328,11 +1360,11 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
-    % If an isocenter z position unsync action exists
-    if subnodeList.getLength > 0
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
         
-        % Retreieve a handle to the search result
-        subnode = subnodeList.item(0);
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
 
         % If the planData structure events cell array already exists
         if isfield(planData, 'events')
@@ -1347,7 +1379,7 @@ for i = 1:nodeList.getLength
         % Store the isocenter z position to the events cell array.  The
         % first cell is tau, the second is type, and the third is the
         % value.
-        planData.events{k,1} = 0;
+        planData.events{k,1} = planData.startTau(j);
         planData.events{k,2} = 'isoZ';
         planData.events{k,3} = ...
             str2double(subnode.getFirstChild.getNodeValue);
@@ -1364,56 +1396,52 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
-    % If one or more gantry velocity sync actions exist
-    if subnodeList.getLength > 0
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
         
-        % Loop through the search results
-        for j = 1:subnodeList.getLength
-            
-            % Retrieve a handle to this result
-            subnode = subnodeList.item(j-1);
+        % Store the returned value
+        subnode = subnodeList.item(j-1);   
+           
+        % If the planData structure events cell array already exists
+        if isfield(planData, 'events')
 
-             % If the planData structure events cell array already exists
-            if isfield(planData, 'events')
-                
-                % Set k to the next index
-                k = size(planData.events, 1) + 1;
-            else
-                % Otherwise events does not yet exist, so start with 1
-                k = 1;
-            end
-
-            % Search for the tau of this sync event
-            subsubexpression = xpath.compile('tau');
-
-            % Evaluate xpath expression and retrieve the results
-            subsubnodeList = ...
-                subsubexpression.evaluate(subnode, XPathConstants.NODESET);
-            
-            % Store the first returned value
-            subsubnode = subsubnodeList.item(0);
-
-            % Store the tau value to the events cell array
-            planData.events{k,1} = ...
-                str2double(subsubnode.getFirstChild.getNodeValue);
-
-            % Store the type to gantryRate
-            planData.events{k,2} = 'gantryRate';
-
-            % Search for the value of this sync event
-            subsubexpression = xpath.compile('velocity');
-
-            % Evaluate xpath expression and retrieve the results
-            subsubnodeList = ...
-                subsubexpression.evaluate(subnode, XPathConstants.NODESET);
-            
-            % Store the first returned value
-            subsubnode = subsubnodeList.item(0);
-
-            % Store the value of this sync event
-            planData.events{k,3} = ...
-                str2double(subsubnode.getFirstChild.getNodeValue);
+            % Set k to the next index
+            k = size(planData.events, 1) + 1;
+        else
+            % Otherwise events does not yet exist, so start with 1
+            k = 1;
         end
+
+        % Search for the tau of this sync event
+        subsubexpression = xpath.compile('tau');
+
+        % Evaluate xpath expression and retrieve the results
+        subsubnodeList = ...
+            subsubexpression.evaluate(subnode, XPathConstants.NODESET);
+
+        % Store the first returned value
+        subsubnode = subsubnodeList.item(0);
+
+        % Store the tau value to the events cell array
+        planData.events{k,1} = ...
+            str2double(subsubnode.getFirstChild.getNodeValue);
+
+        % Store the type to gantryRate
+        planData.events{k,2} = 'gantryRate';
+
+        % Search for the value of this sync event
+        subsubexpression = xpath.compile('velocity');
+
+        % Evaluate xpath expression and retrieve the results
+        subsubnodeList = ...
+            subsubexpression.evaluate(subnode, XPathConstants.NODESET);
+
+        % Store the first returned value
+        subsubnode = subsubnodeList.item(0);
+
+        % Store the value of this sync event
+        planData.events{k,3} = ...
+            str2double(subsubnode.getFirstChild.getNodeValue);
     end
 
     %% Load jaw velocities
@@ -1424,74 +1452,70 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
-    % If one or more jaw velocity sync actions exist
-    if subnodeList.getLength > 0
-        
-        % Loop through the search results
-        for j = 1:subnodeList.getLength
-            
-            % Retrieve a handle to this result
-            subnode = subnodeList.item(j-1);
+    % Loop through the search results
+    for j = 1:subnodeList.getLength
 
-             % If the planData structure events cell array already exists
-            if isfield(planData, 'events')
-                
-                % Set k to the next index
-                k = size(planData.events, 1) + 1;
-            else
-                % Otherwise events does not yet exist, so start with 1
-                k = 1;
-            end
+        % Retrieve a handle to this result
+        subnode = subnodeList.item(j-1);
 
-            % Search for the tau of this sync event
-            subsubexpression = xpath.compile('tau');
+         % If the planData structure events cell array already exists
+        if isfield(planData, 'events')
 
-            % Evaluate xpath expression and retrieve the results
-            subsubnodeList = ...
-                subsubexpression.evaluate(subnode, XPathConstants.NODESET);
-            
-            % Store the first returned value
-            subsubnode = subsubnodeList.item(0);
-
-            % Store the next and subsequent event cell array tau values
-            planData.events{k,1} = ...
-                str2double(subsubnode.getFirstChild.getNodeValue);
-            planData.events{k+1,1} = ...
-                str2double(subsubnode.getFirstChild.getNodeValue);
-
-            % Store the next and subsequent types to jaw front and back 
-            % rates, respectively
-            planData.events{k,2} = 'jawFrontRate';
-            planData.events{k+1,2} = 'jawBackRate';
-
-            % Search for the front velocity value
-            subsubexpression = xpath.compile('frontVelocity');
-
-            % Evaluate xpath expression and retrieve the results
-            subsubnodeList = ...
-                subsubexpression.evaluate(subnode, XPathConstants.NODESET);
-            
-            % Store the first returned value
-            subsubnode = subsubnodeList.item(0);
-
-            % Store the front velocity value
-            planData.events{k,3} = ...
-                str2double(subsubnode.getFirstChild.getNodeValue);
-
-            % Search for the back velocity value
-            subsubexpression = xpath.compile('backVelocity');
-
-            % Evaluate xpath expression and retrieve the results
-            subsubnodeList = ...
-                subsubexpression.evaluate(subnode, XPathConstants.NODESET);
-            
-            % Store the first returned value
-            subsubnode = subsubnodeList.item(0);
-
-            % Store the back velocity value
-            planData.events{k+1,3} = ...
-                str2double(subsubnode.getFirstChild.getNodeValue);
+            % Set k to the next index
+            k = size(planData.events, 1) + 1;
+        else
+            % Otherwise events does not yet exist, so start with 1
+            k = 1;
         end
+
+        % Search for the tau of this sync event
+        subsubexpression = xpath.compile('tau');
+
+        % Evaluate xpath expression and retrieve the results
+        subsubnodeList = ...
+            subsubexpression.evaluate(subnode, XPathConstants.NODESET);
+
+        % Store the first returned value
+        subsubnode = subsubnodeList.item(0);
+
+        % Store the next and subsequent event cell array tau values
+        planData.events{k,1} = ...
+            str2double(subsubnode.getFirstChild.getNodeValue);
+        planData.events{k+1,1} = ...
+            str2double(subsubnode.getFirstChild.getNodeValue);
+
+        % Store the next and subsequent types to jaw front and back 
+        % rates, respectively
+        planData.events{k,2} = 'jawFrontRate';
+        planData.events{k+1,2} = 'jawBackRate';
+
+        % Search for the front velocity value
+        subsubexpression = xpath.compile('frontVelocity');
+
+        % Evaluate xpath expression and retrieve the results
+        subsubnodeList = ...
+            subsubexpression.evaluate(subnode, XPathConstants.NODESET);
+
+        % Store the first returned value
+        subsubnode = subsubnodeList.item(0);
+
+        % Store the front velocity value
+        planData.events{k,3} = ...
+            str2double(subsubnode.getFirstChild.getNodeValue);
+
+        % Search for the back velocity value
+        subsubexpression = xpath.compile('backVelocity');
+
+        % Evaluate xpath expression and retrieve the results
+        subsubnodeList = ...
+            subsubexpression.evaluate(subnode, XPathConstants.NODESET);
+
+        % Store the first returned value
+        subsubnode = subsubnodeList.item(0);
+
+        % Store the back velocity value
+        planData.events{k+1,3} = ...
+            str2double(subsubnode.getFirstChild.getNodeValue);
     end
 
     %% Load couch velocities
@@ -1502,56 +1526,52 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
-    % If one or more couch velocity sync actions exist
-    if subnodeList.getLength > 0
-        
-        % Loop through the search results
-        for j = 1:subnodeList.getLength
-            
-            % Retrieve a handle to this result
-            subnode = subnodeList.item(j-1);
+    % Loop through the search results
+    for j = 1:subnodeList.getLength
 
-            % If the planData structure events cell array already exists
-            if isfield(planData, 'events')
-                
-                % Set k to the next index
-                k = size(planData.events, 1) + 1;
-            else
-                % Otherwise events does not yet exist, so start with 1
-                k = 1;
-            end
+        % Retrieve a handle to this result
+        subnode = subnodeList.item(j-1);
 
-            % Search for the tau of this sync event
-            subsubexpression = xpath.compile('tau');
+        % If the planData structure events cell array already exists
+        if isfield(planData, 'events')
 
-            % Evaluate xpath expression and retrieve the results
-            subsubnodeList = ...
-                subsubexpression.evaluate(subnode, XPathConstants.NODESET);
-            
-            % Store the first returned value
-            subsubnode = subsubnodeList.item(0);
-
-            % Store the next event cell array tau value
-            planData.events{k,1} = ...
-                str2double(subsubnode.getFirstChild.getNodeValue);
-
-            % Store the type value as isoZRate (couch velocity)
-            planData.events{k,2} = 'isoZRate';
-
-            % Search for the zVelocity value
-            subsubexpression = xpath.compile('zVelocity');
-
-            % Evaluate xpath expression and retrieve the results
-            subsubnodeList = ...
-                subsubexpression.evaluate(subnode, XPathConstants.NODESET);
-            
-            % Store the first returned value
-            subsubnode = subsubnodeList.item(0);
-
-            % Store the z velocity value
-            planData.events{k,3} = ...
-                str2double(subsubnode.getFirstChild.getNodeValue);
+            % Set k to the next index
+            k = size(planData.events, 1) + 1;
+        else
+            % Otherwise events does not yet exist, so start with 1
+            k = 1;
         end
+
+        % Search for the tau of this sync event
+        subsubexpression = xpath.compile('tau');
+
+        % Evaluate xpath expression and retrieve the results
+        subsubnodeList = ...
+            subsubexpression.evaluate(subnode, XPathConstants.NODESET);
+
+        % Store the first returned value
+        subsubnode = subsubnodeList.item(0);
+
+        % Store the next event cell array tau value
+        planData.events{k,1} = ...
+            str2double(subsubnode.getFirstChild.getNodeValue);
+
+        % Store the type value as isoZRate (couch velocity)
+        planData.events{k,2} = 'isoZRate';
+
+        % Search for the zVelocity value
+        subsubexpression = xpath.compile('zVelocity');
+
+        % Evaluate xpath expression and retrieve the results
+        subsubnodeList = ...
+            subsubexpression.evaluate(subnode, XPathConstants.NODESET);
+
+        % Store the first returned value
+        subsubnode = subsubnodeList.item(0);
+
+        % Store the z velocity value
+        planData.events{k,3} = ...
+            str2double(subsubnode.getFirstChild.getNodeValue);
     end
 
     %% Store delivery plan image file reference
@@ -1562,12 +1582,16 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
     
-    % Store the first returned value
-    subnode = subnodeList.item(0);
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
+        
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
 
-    % Store the binary image file archive path
-    planData.fluenceFilename = ...
-        fullfile(path, char(subnode.getFirstChild.getNodeValue));
+        % Store the binary image file archive path
+        planData.fluenceFilename{j} = ...
+            fullfile(path, char(subnode.getFirstChild.getNodeValue));
+    end
 
     % Because the matching fluence delivery plan was found, break the
     % for loop to stop searching
@@ -1575,12 +1599,20 @@ for i = 1:nodeList.getLength
 end
 
 %% Finalize Events array
-% Add a sync event at tau = 0.   Events that do not have a value
-% are given the placeholder value 1.7976931348623157E308 
-k = size(planData.events,1)+1;
-planData.events{k,1} = 0;
-planData.events{k,2} = 'sync';
-planData.events{k,3} = 1.7976931348623157E308;
+% Add a sync and unsync events for each startTau. Events that do not have a
+% value are given the placeholder value 1.7976931348623157E308 
+for i = 1:length(planData.startTau)
+    k = size(planData.events,1)+1;
+    planData.events{k,1} = planData.startTau(i);
+    planData.events{k,2} = 'sync';
+    planData.events{k,3} = 1.7976931348623157E308;
+    
+    k = size(planData.events,1)+1;
+    planData.events{k,1} = planData.startTau(i) + ...
+        planData.numberOfProjections(i);
+    planData.events{k,2} = 'unsync';
+    planData.events{k,3} = 1.7976931348623157E308;
+end
 
 % Add a projection width event at tau = 0
 k = size(planData.events,1)+1;
@@ -1599,84 +1631,100 @@ planData.events{k,3} = 1.7976931348623157E308;
 planData.events = sortrows(planData.events);
 
 %% Load fluence sinogram
-% Log start of sinogram load
-if exist('Event', 'file') == 2
-    Event(sprintf('Loading delivery plan binary data from %s', ...
-        planData.fluenceFilename));
-end
-
-% Open a read file handle to the delivery plan binary array 
-fid = fopen(planData.fluenceFilename, 'r', 'b');
-
 % Initalize the return variable sinogram to store the delivery 
 % plan in sinogram notation
-sinogram = zeros(64, planData.numberOfProjections);
+sinogram = zeros(64, sum(planData.numberOfProjections));
 
-% Loop through the number of projections in the delivery plan
-for i = 1:planData.numberOfProjections
+% Loop through the number of beams
+for i = 1:length(planData.numberOfProjections)
     
-    % Read 2 double events for every leaf in numberOfLeaves.  Note that
-    % the XML delivery plan stores each all the leaves for the first
-    % projection, then the second, etc, as opposed to the dose
-    % calculator plan.img, which stores all events for the first leaf,
-    % then all events for the second leaf, etc.  The first event is the
-    % "open" tau value, while the second is the "close" value
-    leaves = fread(fid, planData.numberOfLeaves * 2, 'double');
+    % Log start of sinogram load
+    if exist('Event', 'file') == 2
+        Event(sprintf('Loading delivery plan binary data from %s', ...
+            planData.fluenceFilename{i}));
+    end
 
-    % Loop through each projection (2 events)
-    for j = 1:2:size(leaves)
-        
-       % The projection number is the mean of the "open" and "close"
-       % events.  This assumes that the open time was centered on the 
-       % projection.  1 is added as MATLAB uses one based indices.
-       index = floor((leaves(j) + leaves(j+1)) / 2) + 1;
+    % Open a read file handle to the delivery plan binary array 
+    fid = fopen(planData.fluenceFilename{i}, 'r', 'b');
+    
+    % Loop through the number of projections in the delivery plan
+    for j = 1:planData.numberOfProjections(i)
+    
+        % Read 2 double events for every leaf in numberOfLeaves.  Note that
+        % the XML delivery plan stores each all the leaves for the first
+        % projection, then the second, etc, as opposed to the dose
+        % calculator plan.img, which stores all events for the first leaf,
+        % then all events for the second leaf, etc.  The first event is the
+        % "open" tau value, while the second is the "close" value
+        leaves = fread(fid, planData.numberOfLeaves(i) * 2, 'double');
 
-       % Store the difference between the "open" and "close" tau values
-       % as the fractional leaf open time (remember one tau = one
-       % projection) in the sinogram array under the correct
-       % leaf (numbered 1:64)
-       sinogram(planData.lowerLeafIndex+(j+1)/2, index) = ...
-           leaves(j+1) - leaves(j);
+        % Loop through each projection (2 events)
+        for k = 1:2:length(leaves)
+           
+           % The projection number is the mean of the "open" and "close"
+           % events.  This assumes that the open time was centered on the 
+           % projection.  1 is added as MATLAB uses one based indices.
+           index = floor((leaves(k) + leaves(k+1)) / 2) + 1;
+
+           % Store the difference between the "open" and "close" tau values
+           % as the fractional leaf open time (remember one tau = one
+           % projection) in the sinogram array under the correct
+           % leaf (numbered 1:64)
+           sinogram(planData.lowerLeafIndex(i)+(k+1)/2, index) = ...
+               leaves(k+1) - leaves(k);
+        end
+    end
+    
+    % Close the delivery plan file handle
+    fclose(fid);
+end
+
+% Determine first and last "active" projection for each beam
+for i = 1:length(planData.numberOfProjections)
+    
+    % Loop through each projection in temporary sinogram array
+    for j = (planData.startTau(i)+1):size(sinogram, 2)
+
+        % If the maximum value for all leaves is greater than 1%, assume
+        % the projection is active
+        if max(sinogram(:,j)) > 0.01
+
+            % Set startTrim to the current projection
+            planData.startTrim(i) = j;
+
+            % Stop looking for the first active projection
+            break;
+        end
+    end
+
+    % Loop backwards through each projection in temporary sinogram array
+    for j = (planData.startTau(i)+planData.numberOfProjections(i)):-1:1
+
+        % If the maximum value for all leaves is greater than 1%, assume
+        % the projection is active
+        if max(sinogram(:,j)) > 0.01
+
+            % Set stopTrim to the current projection
+            planData.stopTrim(i) = j;
+
+            % Stop looking for the last active projection
+            break;
+        end
     end
 end
 
-% Close the delivery plan file handle
-fclose(fid);
-
-% Determine first and last "active" projection
-% Loop through each projection in temporary sinogram array
-for i = 1:size(sinogram, 2)
-
-    % If the maximum value for all leaves is greater than 1%, assume
-    % the projection is active
-    if max(sinogram(:,i)) > 0.01
-
-        % Set startTrim to the current projection
-        planData.startTrim = i;
-
-        % Stop looking for the first active projection
-        break;
-    end
-end
-
-% Loop backwards through each projection in temporary sinogram array
-for i = size(sinogram,2):-1:1
-
-    % If the maximum value for all leaves is greater than 1%, assume
-    % the projection is active
-    if max(sinogram(:,i)) > 0.01
-
-        % Set stopTrim to the current projection
-        planData.stopTrim = i;
-
-        % Stop looking for the last active projection
-        break;
-    end
-end
+% Initialize sinogram
+trimmedLengths(2:(length(planData.numberOfProjections)+1)) = ...
+    planData.stopTrim - planData.startTrim;
+planData.sinogram = zeros(64, sum(trimmedLengths));
 
 % Set the sinogram return variable to the start and stop trimmed
 % binary array
-planData.sinogram = sinogram(:, planData.startTrim:planData.stopTrim);
+for i = 2:length(trimmedLengths)
+    planData.sinogram(:,(sum(trimmedLengths(1:i-1))+1):...
+        (sum(trimmedLengths(1:i)))+1) = sinogram(:, ...
+        planData.startTrim(i-1):planData.stopTrim(i-1));
+end
 
 %% Load machine agnostic delivery plan
 if exist('Event', 'file') == 2
@@ -1740,6 +1788,25 @@ for i = 1:nodeList.getLength
         continue
     end
     
+    %% Load starting tau
+    % Search for delivery plan lower leaf index
+    subexpression = ...
+        xpath.compile('deliveryPlan/states/states/tau');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+    
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
+    
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
+
+        % Store the starting tau value
+        planData.startTau(j) = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
     %% Load lower leaf index
     % Search for delivery plan lower leaf index
     subexpression = ...
@@ -1748,12 +1815,16 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
     
-    % Store the first returned value
-    subnode = subnodeList.item(0);
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
+    
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
 
-    % Store the lower leaf index value
-    planData.agnosticLowerLeafIndex = ...
-        str2double(subnode.getFirstChild.getNodeValue);
+        % Store the lower leaf index value
+        planData.agnosticLowerLeafIndex(j) = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
 
     %% Load number of projections
     % Search for delivery plan number of projections
@@ -1763,12 +1834,16 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
     
-    % Store the first returned value
-    subnode = subnodeList.item(0);
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
+    
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
 
-    % Store the number of projections value
-    planData.agnosticNumberOfProjections = ...
-        str2double(subnode.getFirstChild.getNodeValue);
+        % Store the number of projections value
+        planData.agnosticNumberOfProjections(j) = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
 
     %% Load number of leaves
     % Search for delivery plan number of leaves
@@ -1778,12 +1853,16 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
     
-    % Store the first returned value
-    subnode = subnodeList.item(0);
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
+    
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
 
-    % Store the number of leaves value
-    planData.agnosticNumberOfLeaves = ...
-        str2double(subnode.getFirstChild.getNodeValue);
+        % Store the number of leaves value
+        planData.agnosticNumberOfLeaves(j) = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
     
     %% Store delivery plan image file reference
     % Search for delivery plan parent UID
@@ -1793,78 +1872,93 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
     
-    % Store the first returned value
-    subnode = subnodeList.item(0);
+    % Loop through returned values (there will be multiple if TomoDirect)
+    for j = 1:subnodeList.getLength
+        
+        % Store the returned value
+        subnode = subnodeList.item(j-1);
 
-    % Store the binary image file archive path
-    planData.agnosticFilename = ...
-        fullfile(path, char(subnode.getFirstChild.getNodeValue));
-
+        % Store the binary image file archive path
+        planData.agnosticFilename{j} = ...
+            fullfile(path, char(subnode.getFirstChild.getNodeValue));
+    end
+    
     % Because the matching agnostic delivery plan was found, break the
     % for loop to stop searching
     break;
 end
 
 %% Save machine agnostic sinogram
-% Log start of sinogram load
-if exist('Event', 'file') == 2
-    Event(sprintf('Loading delivery plan binary data from %s', ...
-        planData.agnosticFilename));
-end
-
-% Open a read file handle to the delivery plan binary array 
-fid = fopen(planData.agnosticFilename, 'r', 'b');
-
 % Initalize the return variable sinogram to store the delivery 
 % plan in sinogram notation
-sinogram = zeros(64, planData.agnosticNumberOfProjections);
+sinogram = zeros(64, sum(planData.agnosticNumberOfProjections));
 
 % Loop through the number of projections in the delivery plan
-for i = 1:planData.agnosticNumberOfProjections
+for i = 1:length(planData.agnosticNumberOfProjections)
     
-    % Read 2 double events for every leaf in numberOfLeaves.  Note that
-    % the XML delivery plan stores each all the leaves for the first
-    % projection, then the second, etc, as opposed to the dose
-    % calculator plan.img, which stores all events for the first leaf,
-    % then all events for the second leaf, etc.  The first event is the
-    % "open" tau value, while the second is the "close" value
-    leaves = fread(fid, planData.agnosticNumberOfLeaves * 2, 'double');
-
-    % Loop through each projection (2 events)
-    for j = 1:2:size(leaves)
-        
-       % The projection number is the mean of the "open" and "close"
-       % events.  This assumes that the open time was centered on the 
-       % projection.  1 is added as MATLAB uses one based indices.
-       index = floor((leaves(j) + leaves(j+1)) / 2) + 1;
-
-       % Store the difference between the "open" and "close" tau values
-       % as the fractional leaf open time (remember one tau = one
-       % projection) in the sinogram array under the correct
-       % leaf (numbered 1:64)
-       sinogram(planData.agnosticLowerLeafIndex+(j+1)/2, index) = ...
-           leaves(j+1) - leaves(j);
+    % Log start of sinogram load
+    if exist('Event', 'file') == 2
+        Event(sprintf('Loading delivery plan binary data from %s', ...
+            planData.agnosticFilename{i}));
     end
-end
 
-% Close the delivery plan file handle
-fclose(fid);
+    % Open a read file handle to the delivery plan binary array 
+    fid = fopen(planData.agnosticFilename{i}, 'r', 'b');
+
+    % Loop through the number of projections in the delivery plan
+    for j = 1:planData.agnosticNumberOfProjections(i)
+    
+        % Read 2 double events for every leaf in numberOfLeaves.  Note that
+        % the XML delivery plan stores each all the leaves for the first
+        % projection, then the second, etc, as opposed to the dose
+        % calculator plan.img, which stores all events for the first leaf,
+        % then all events for the second leaf, etc.  The first event is the
+        % "open" tau value, while the second is the "close" value
+        leaves = fread(fid, planData.agnosticNumberOfLeaves(i) * 2, ...
+            'double');
+
+        % Loop through each projection (2 events)
+        for k = 1:2:length(leaves)
+
+           % The projection number is the mean of the "open" and "close"
+           % events.  This assumes that the open time was centered on the 
+           % projection.  1 is added as MATLAB uses one based indices.
+           index = floor((leaves(k) + leaves(k+1)) / 2) + 1;
+
+           % Store the difference between the "open" and "close" tau values
+           % as the fractional leaf open time (remember one tau = one
+           % projection) in the sinogram array under the correct
+           % leaf (numbered 1:64)
+           sinogram(planData.agnosticLowerLeafIndex(i)+(k+1)/2, index) = ...
+               leaves(k+1) - leaves(k);
+        end
+    end
+    
+    % Close the delivery plan file handle
+    fclose(fid);
+end
 
 % Set the agnostic return variable to the start and stop trimmed
 % binary array
-planData.agnostic = sinogram(:, planData.startTrim:planData.stopTrim);
+for i = 2:length(trimmedLengths)
+    planData.agnostic(:,(sum(trimmedLengths(1:i-1))+1):...
+        (sum(trimmedLengths(1:i)))+1) = sinogram(:, ...
+        planData.startTrim(i-1):planData.stopTrim(i-1));
+end
 
 %% Finish up
 % Report success
 if exist('Event', 'file') == 2
-    Event(sprintf(['Plan data loaded successfully with %i events and %i', ...
-        ' projections in %0.3f seconds'], size(planData.events, 1), ...
-        planData.numberOfProjections, toc));
+    Event(sprintf(['Plan data loaded successfully with %i events, ', ...
+        '%i beams, and %i projections in %0.3f seconds'], ...
+        size(planData.events, 1), length(planData.numberOfProjections), ...
+        sum(planData.numberOfProjections), toc));
 end
 
 % Clear temporary variables
-clear fid i j node subnode subsubnode nodeList subnodeList subsubnodeList ...
-    expression subexpression subsubexpression doc factory xpath d t;
+clear fid i j k node subnode subsubnode nodeList subnodeList subsubnodeList ...
+    expression subexpression subsubexpression doc factory xpath d t ...
+    trimmedLengths;
 
 % Catch errors, log, and rethrow
 catch err
