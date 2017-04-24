@@ -1,5 +1,5 @@
 function data = ParseDetData(filename)
-% ParseDetData is a function that exctracts the dose1, dose2, and detector
+% ParseDetData is a function that extracts the dose1, dose2, and detector
 % data from a compressed TomoTherapy Detector Data file (detdata.dat).
 % This function will display a progress bar while it loads (unless MATLAB 
 % was executed with the -nodisplay, -nodesktop, or -noFigureWindows flags).
