@@ -32,17 +32,11 @@ TomoTherapy is a registered trademark of Accuray Incorporated.
 
 ## Installation and Use
 
-To install the TomoTherapy Archive Extraction Tools, copy all MATLAB .m files and subfolders from this repository into your MATLAB path.  If installing as a submodule into another git repository, execute `git submodule add https://github.com/mwgeurts/tomo_extract`.
-
-To configure a remote calculation server, find and modify the following line in `CalcDose()` with the DNS name (or IP address), username, and password for the workstation you wish to use.  This user account must have SSH access rights, rights to execute `gpusadose` and/or `sadose`, and finally read/write acces to the temp directory. 
-
-```matlab
-ssh2 = ssh2_config('tomo-research', 'tomo', 'hi-art');
-```
+To install the TomoTherapy Archive Extraction Tools, copy all MATLAB .m files and subfolders from this repository into your MATLAB path.  If installing as a submodule into another git repository, execute `git submodule add https://github.com/mwgeurts/tomo_extract`. To configure dose calculation, see the [CalcDose](README.md#calcdose) instructions below.
 
 ## Compatibility and Requirements
 
-The TomoTherapy Archive Extraction Tools have been validated for 4.X and 5.X patient archives using MATLAB versions 8.3 through 8.5 on Macintosh OSX 10.8 (Mountain Lion) through 10.10 (Yosemite).  These tools use the `javax.xml.xpath` Java library and `xmlread()` MATLAB function for parsing archive XML files.
+The TomoTherapy Archive Extraction Tools have been validated for 4.X and 5.X patient archives using MATLAB versions 8.3 through 8.5 on Macintosh OSX 10.8 (Mountain Lion) through 10.10 (Yosemite).  These tools use the `javax.xml.xpath` Java library and `xmlread()` MATLAB function for parsing archive XML files. These functions are compatible with helical and direct plans.
 
 ## Tools and Examples
 
@@ -276,16 +270,19 @@ plans = FindPlans(path, name);
 
 ### CalcDose
 
-`CalcDose()` reads in a patient CT and delivery plan, generate a set of inputs that can be passed to the TomoTherapy Standalone Dose Calculator, and executes the dose calculation either locally or remotely.  
+`CalcDose` reads in a patient CT and delivery plan, generate a set of inputs that can be passed to the TomoTherapy Standalone Dose Calculator, and executes the dose calculation either locally or remotely.  
 
 This function will first attempt to calculate dose locally, if available (the system must support the which command).  If not found, the dose calculator inputs will be copied to a remote computation server via SCP and sadose/gpusadose executed via an initiated SSH connection. 
 
-To change the connection information for the remote computation server, edit the following line in the code below.  The first argument is the server DNS name (or IP address), while the second and third are the username and password, respectively.  This user account must have SSH access rights, rights to execute sadose/gpusadose, and finally read/write 
-access to the temp directory.
+To change the connection information for the remote computation server, create a file named config.txt in the working directory with the following content: 
 
-```matlab
-ssh2 = ssh2_config('tomo-research', 'tomo', 'hi-art');
+```text
+  REMOTE_CALC_SERVER = tomo-research
+  REMOTE_CALC_USER = username
+  REMOTE_CALC_PASS = password
 ```
+
+The first argument is the server DNS name (or IP address), while the second and third are the username and password, respectively.  This user account must have SSH access rights, rights to execute sadose/gpusadose, and finally read/write access to the temp directory. Note, this function assumes that the remote computation server is unix-based.
 
 Following execution, the CT image, folder, and SSH connection variables are persisted, such that CalcDose may be executed again with only a new plan input argument.
 
