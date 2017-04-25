@@ -1,4 +1,4 @@
-function [machine, planUID, detdata, tau] = LoadStaticCouchQA(path, name, ...
+function [machine, planUID, detdata] = LoadStaticCouchQA(path, name, ...
     leftTrim, channelCal, detectorRows)
 % LoadStaticCouchQA searches a TomoTherapy machine archive (given by the 
 % name and path input variables) for static couch QA procedures. If more 
@@ -25,7 +25,6 @@ function [machine, planUID, detdata, tau] = LoadStaticCouchQA(path, name, ...
 %   detdata: n x detectorRows of uncorrected exit detector data for a 
 %       delivered static couch DQA plan, where n is the number of 
 %       projections in the plan
-%   tau: tau per projection for each beam (will be one for helical plans)
 %
 % Below is an example of how this function is used:
 %
@@ -68,7 +67,6 @@ end
 % Initialize empty return variables
 planUID = '';
 detdata = [];
-tau = [];
 
 % The patient XML is parsed using xpath class
 import javax.xml.xpath.*
@@ -235,10 +233,29 @@ for i = 1:nodeList.getLength
     returnDQAData{i}.dimensions(2) = ...
         str2double(subnode.getFirstChild.getNodeValue);
     
-    % Search for delivery plan tau per projection
+    % Search for delivery plan number of projections
     subexpression = xpath.compile(['fullDeliveryPlanDataArray/', ...
         'fullDeliveryPlanDataArray/deliveryPlan/states/', ...
-        'states/tauPerProjection']);
+        'states/numberOfProjections']);
+    
+    % Retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+    
+    % Loop through results (there will be multiple for TomoDirect plans)
+    for j = 1:subnodeList.getLength
+        
+        % Set a handle to the result
+        subnode = subnodeList.item(j-1);
+        
+        % Store the number of projections
+        returnDQAData{i}.numberOfProjections(j) = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
+    
+    % Search for delivery plan pulse count
+    subexpression = xpath.compile(['fullProcedureReturnData/', ...
+        'fullProcedureReturnData/procedureReturnData/deliveryResults/', ...
+        'deliveryResults/pulseCount']);
     
     % Retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
@@ -250,7 +267,7 @@ for i = 1:nodeList.getLength
         subnode = subnodeList.item(j-1);
         
         % Store the pulse count
-        returnDQAData{i}.tau(j) = ...
+        returnDQAData{i}.pulseCount(j) = ...
             str2double(subnode.getFirstChild.getNodeValue);
     end
 end 
@@ -486,9 +503,6 @@ else
     % Store machine from selected plan
     machine = returnDQAData{plan}.machine;
     
-    % Store tau per projection
-    tau = returnDQAData{plan}.tau;
-    
     %% Load parent plan information
     if exist('Event', 'file') == 2
         Event('Searching for approved treatment plan for static couch QA');
@@ -564,30 +578,56 @@ else
     % file. For gen4 (TomoDetectors), this should be 643
     rows = returnDQAData{plan}.dimensions(1);
 
-    % Set the variables startTrim to 1.  The detdata will be longer 
-    % than the sinogram but will be auto-aligned based on the StopTrim 
-    % value set above
-    startTrim = 1;
-
-    % Set the variable stopTrim tag to the number of projections
-    % (note, this assumes the procedure was stopped after the last
-    % active projection)
-    stopTrim = returnDQAData{plan}.dimensions(2);
-
     % Read the data as single data into a temporary array, reshaping
-    % into the number of rows by the number of projections
+    % into the number of rows by the number of data projections
     arr = reshape(fread(fid, rows * returnDQAData{plan}.dimensions(2), ...
         'single'), rows, returnDQAData{plan}.dimensions(2));
-
-    % Set detdata by trimming the temporary array by leftTrim and 
-    % rightTrim channels (to match the QA data and leafMap) and 
-    % startTrim and stopTrim projections (to match the sinogram)
+    
+    % Compute the cumulative detector data sum
+    arr = cumsum(arr,2);
+    
+    % Compute the pulse count at end of each data projection
+    pulses = (1:1:returnDQAData{plan}.dimensions(2)) * ...
+        sum(returnDQAData{plan}.pulseCount) / ...
+        returnDQAData{plan}.dimensions(2);
+    
+    % Log beam number and pulse count
     if exist('Event', 'file') == 2
-        Event(sprintf('Trimming raw data to %i:%i, %i:%i', leftTrim, ...
-            rightTrim, startTrim, stopTrim));
+        Event(sprintf('Total pulse count is %i', ...
+            sum(returnDQAData{plan}.pulseCount)));
     end
-    detdata = arr(leftTrim:rightTrim, startTrim:stopTrim);
-
+    
+    % Initialize detdata
+    detdata = zeros(rightTrim - leftTrim, ...
+        sum(returnDQAData{plan}.numberOfProjections));
+    
+    % Loop through each beam fragment
+    for i = 1:length(returnDQAData{plan}.numberOfProjections)
+        
+        % Log beam number and pulse count
+        if exist('Event', 'file') == 2
+            Event(sprintf(['Accumulating beam %i detector data, trimming ', ...
+                'to channels %i:%i over %i projections'], i, leftTrim, ...
+                rightTrim, returnDQAData{plan}.numberOfProjections(i)));
+        end
+        
+        % Compute projection range
+        projs = (1 + sum(returnDQAData{plan}.numberOfProjections(1:i-1))):...
+            sum(returnDQAData{plan}.numberOfProjections(1:i));
+        
+        % Compute pulse interval
+        interval = sum(returnDQAData{plan}.pulseCount(1:i-1)) + ...
+                (returnDQAData{plan}.pulseCount(i) .* ...
+                (0:returnDQAData{plan}.numberOfProjections(i)) / ...
+                returnDQAData{plan}.numberOfProjections(i));
+        
+        % Loop through each projection
+        for j = leftTrim:rightTrim
+            detdata(1 + j - leftTrim, projs) = ...
+                diff(interp1(pulses, arr(j,:), interval, 'linear', 0));
+        end
+    end
+    
     % Divide each projection by channelCal to account for relative channel
     % sensitivity effects (see calculation of channelCal above)
     if exist('Event', 'file') == 2
@@ -599,7 +639,7 @@ else
     fclose(fid);
 
     % Clear all temporary variables
-    clear fid arr rightTrim startTrim stopTrim rows plan;
+    clear fid arr rightTrim startTrim stopTrim rows plan i j pulses;
 end
 
 % Clear xpath temporary variables
