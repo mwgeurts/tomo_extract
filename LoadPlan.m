@@ -1714,16 +1714,15 @@ for i = 1:length(planData.numberOfProjections)
 end
 
 % Initialize sinogram
-trimmedLengths(2:(length(planData.numberOfProjections)+1)) = ...
-    planData.stopTrim - planData.startTrim;
-planData.sinogram = zeros(64, sum(trimmedLengths));
+planData.trimmedLengths = planData.stopTrim - planData.startTrim + 1;
+planData.sinogram = zeros(64, sum(planData.trimmedLengths));
 
 % Set the sinogram return variable to the start and stop trimmed
 % binary array
-for i = 2:length(trimmedLengths)
-    planData.sinogram(:,(sum(trimmedLengths(1:i-1))+1):...
-        (sum(trimmedLengths(1:i)))+1) = sinogram(:, ...
-        planData.startTrim(i-1):planData.stopTrim(i-1));
+for i = 1:length(planData.trimmedLengths)
+    planData.sinogram(:,(sum(planData.trimmedLengths(1:i-1))+1):...
+        sum(planData.trimmedLengths(1:i))) = sinogram(:, ...
+        planData.startTrim(i):planData.stopTrim(i));
 end
 
 %% Load machine agnostic delivery plan
@@ -1940,10 +1939,10 @@ end
 
 % Set the agnostic return variable to the start and stop trimmed
 % binary array
-for i = 2:length(trimmedLengths)
-    planData.agnostic(:,(sum(trimmedLengths(1:i-1))+1):...
-        (sum(trimmedLengths(1:i)))+1) = sinogram(:, ...
-        planData.startTrim(i-1):planData.stopTrim(i-1));
+for i = 1:length(planData.trimmedLengths)
+    planData.agnostic(:,(sum(planData.trimmedLengths(1:i-1))+1):...
+        sum(planData.trimmedLengths(1:i))) = sinogram(:, ...
+        planData.startTrim(i):planData.stopTrim(i));
 end
 
 %% Finish up
@@ -1957,8 +1956,7 @@ end
 
 % Clear temporary variables
 clear fid i j k node subnode subsubnode nodeList subnodeList subsubnodeList ...
-    expression subexpression subsubexpression doc factory xpath d t ...
-    trimmedLengths;
+    expression subexpression subsubexpression doc factory xpath d t;
 
 % Catch errors, log, and rethrow
 catch err
