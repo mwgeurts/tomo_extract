@@ -173,7 +173,7 @@ dailyqa = LoadDailyQA(path, name, 9000, 531, 528, 0);
 
 ### LoadStaticCouchQA
 
-`LoadStaticCouchQA()` searches a TomoTherapy machine archive (given by the name and path input variables) for static couch QA procedures. If more than one is found, it prompts the user to select one to load (using listdlg call) and reads the exit detector data into the return variable detdata. If no static couch QA procedures are found, the user is prompted to select a DICOM RT transit dose file.
+`LoadStaticCouchQA()` searches a TomoTherapy machine archive (given by the name and path input variables) for static couch QA procedures. If more than one is found, it prompts the user to select one to load (using listdlg call) and reads the exit detector data into the return variable detdata. If no static couch QA procedures are found, the user is prompted to select a DICOM RT transit dose file. Note, TomoDirect DICOM RT transit dose files are not currently supported.
 
 The following variables are required for proper execution:
 
@@ -188,6 +188,7 @@ The following variables are returned upon succesful completion:
 * machine: string containing delivered machine name
 * planUID: UID of the plan if parsed from the patient XML, otherwise 'UNKNOWN' if parsed from a transit dose DICOM file
 * detdata: n x detectorRows of uncorrected exit detector data for a delivered static couch DQA plan, where n is the number of projections in the plan
+* tau: tau per projection for each beam (will be one for helical plans)
 
 Below is an example of how this function is used:
 
@@ -200,7 +201,7 @@ dailyqa = LoadDailyQA(path, name, 9000, 531, 528, 0);
 % Load Static Couch QA data
 path = '/path/to/archive/';
 name = 'Static_Couch_QA_patient.xml';
-[machine, planUID, detdata] = LoadStaticCouchQA(path, name, 27, ...
+[machine, planUID, detdata, tau] = LoadStaticCouchQA(path, name, 27, ...
     dailyqa.channelCal, 643); 
 ```
 

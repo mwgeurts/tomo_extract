@@ -1,11 +1,12 @@
-function [machine, planUID, detdata] = LoadStaticCouchQA(path, name, ...
+function [machine, planUID, detdata, tau] = LoadStaticCouchQA(path, name, ...
     leftTrim, channelCal, detectorRows)
 % LoadStaticCouchQA searches a TomoTherapy machine archive (given by the 
 % name and path input variables) for static couch QA procedures. If more 
 % than one is found, it prompts the user to select one to load (using 
 % listdlg call) and reads the exit detector data into the return variable 
 % detdata. If no static couch QA procedures are found, the user is prompted
-% to select a DICOM RT transit dose file.
+% to select a DICOM RT transit dose file. Note, TomoDirect DICOM RT transit 
+% dose files are not currently supported.
 %
 % The following variables are required for proper execution:
 %   name: name of the DICOM RT file or patient archive XML file
@@ -24,6 +25,7 @@ function [machine, planUID, detdata] = LoadStaticCouchQA(path, name, ...
 %   detdata: n x detectorRows of uncorrected exit detector data for a 
 %       delivered static couch DQA plan, where n is the number of 
 %       projections in the plan
+%   tau: tau per projection for each beam (will be one for helical plans)
 %
 % Below is an example of how this function is used:
 %
@@ -66,6 +68,7 @@ end
 % Initialize empty return variables
 planUID = '';
 detdata = [];
+tau = [];
 
 % The patient XML is parsed using xpath class
 import javax.xml.xpath.*
@@ -176,7 +179,7 @@ for i = 1:nodeList.getLength
     returnDQAData{i}.machine = char(subnode.getFirstChild.getNodeValue);
     
     % Add an entry to the returnDQADataList using the format
-    % "macine | date-time | description"
+    % "machine | date-time | description"
     returnDQADataList{i} = sprintf('%s | %s-%s | %s', ...
         returnDQAData{i}.machine, returnDQAData{i}.date, ...
         returnDQAData{i}.time, returnDQAData{i}.description);
@@ -231,6 +234,25 @@ for i = 1:nodeList.getLength
     subnode = subnodeList.item(1);
     returnDQAData{i}.dimensions(2) = ...
         str2double(subnode.getFirstChild.getNodeValue);
+    
+    % Search for delivery plan tau per projection
+    subexpression = xpath.compile(['fullDeliveryPlanDataArray/', ...
+        'fullDeliveryPlanDataArray/deliveryPlan/states/', ...
+        'states/tauPerProjection']);
+    
+    % Retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+    
+    % Loop through results (there will be multiple for TomoDirect plans)
+    for j = 1:subnodeList.getLength
+        
+        % Set a handle to the result
+        subnode = subnodeList.item(j-1);
+        
+        % Store the pulse count
+        returnDQAData{i}.tau(j) = ...
+            str2double(subnode.getFirstChild.getNodeValue);
+    end
 end 
 
 % Remove empty result cells (due to results that were skipped
@@ -463,6 +485,9 @@ else
     
     % Store machine from selected plan
     machine = returnDQAData{plan}.machine;
+    
+    % Store tau per projection
+    tau = returnDQAData{plan}.tau;
     
     %% Load parent plan information
     if exist('Event', 'file') == 2
