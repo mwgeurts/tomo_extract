@@ -729,22 +729,31 @@ end
 
 % Initialize the leaf spread function vector leafSpread.  The leaf
 % spread array stores the relative MVCT response for an open leaf
-% relative to 15 nearby closed leaves.  15 is arbitrarily chosen.
-dailyqa.leafSpread = zeros(1,16);
+% relative to 15 nearby closed leaves for central and edge leaves. 
+% The length of the spread (15) is arbitrarily chosen.
+dailyqa.leafSpread = zeros(2, 16);
 
-% Loop through leaves 26-10
-for i = 1:size(dailyqa.leafSpread,2)
+% Loop through leaves
+for i = 1:size(dailyqa.leafSpread, 2)
 
-    % Read the MVCT signal for leaves 26 - 10 over projections 7196-7204  
+    % Read the MVCT signal for leaves 26-10 over projections 7196-7204  
     % At this projection, leaf 26 is open, while leaves 25-10 are closed
     % Note leafSpread accounts for channel calibration
-    dailyqa.leafSpread(i) = mean(dailyqa.rawData(dailyqa.leafMap(26-i),...
+    dailyqa.leafSpread(1, i) = mean(dailyqa.rawData(dailyqa.leafMap(26-i),...
         7196:7204)) / dailyqa.channelCal(dailyqa.leafMap(26-i)) - ...
+        dailyqa.background;
+    
+    % Read the MVCT signal for leaves 33-18 over projections 7196-7204  
+    % At this projection, leaf 33 is open, while leaves 32-18 are closed
+    % Note leafSpread accounts for channel calibration
+    dailyqa.leafSpread(2, i) = mean(dailyqa.rawData(dailyqa.leafMap(34-i),...
+        6225:6230)) / dailyqa.channelCal(dailyqa.leafMap(34-i)) - ...
         dailyqa.background;
 end
 
 % Normalize the leafSpread vector to the maximum value (open leaf)
-dailyqa.leafSpread = dailyqa.leafSpread/max(dailyqa.leafSpread);
+dailyqa.leafSpread = max(0, dailyqa.leafSpread ./ ...
+    repmat(max(dailyqa.leafSpread, [], 2), 1, size(dailyqa.leafSpread,2)));
 
 % Clear temporary variables
 clear i peaks;
