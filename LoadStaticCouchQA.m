@@ -440,16 +440,9 @@ if size(returnDQAData,2) == 0
         
     % Otherwise the user did not select a file
     else
-        if exist('Event', 'file') == 2
-            Event(['No Static-Couch DQA data was loaded. The data must be ', ...
-                'contained in the patient archive or loaded as a Transit ', ...
-                'Dose DICOM Exported file'], 'ERROR');
-        else
-            error(['No Static-Couch DQA data was loaded. The data must be ', ...
-                'contained in the patient archive or loaded as a Transit ', ...
-                'Dose DICOM Exported file']);
-        end
-        return;
+        error(['No Static-Couch DQA data was loaded. The data must be ', ...
+            'contained in the patient archive or loaded as a Transit ', ...
+            'Dose DICOM Exported file']);
     end
     
 %% Otherwise, static couch QA data was found    
