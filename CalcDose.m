@@ -539,7 +539,7 @@ if nargin >= 2
     
     % If the local system is unix-based
     if isunix
-        [status, cmdout] = system(['cp ',replace(fullfile(modelfolder, ...
+        [status, cmdout] = system(['cp ',strrep(fullfile(modelfolder, ...
             '*.*'), ' ', '\ '), ' ', folder, '/']);
 
     % Otherwise, if Windows
