@@ -11,7 +11,7 @@ function dose = CalcDose(varargin)
 %
 % To change the connection information for the remote computation server,
 % create a file named config.txt in the working directory with the 
-% following content: 
+% following content (one is provided as an example in this repository): 
 %
 %   REMOTE_CALC_SERVER = tomo-research
 %   REMOTE_CALC_USER = username
