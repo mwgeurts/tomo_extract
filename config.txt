@@ -1,0 +1,3 @@
+REMOTE_CALC_SERVER = tomo-research
+REMOTE_CALC_USER = username
+REMOTE_CALC_PASS = password
