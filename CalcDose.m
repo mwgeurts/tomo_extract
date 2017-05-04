@@ -154,7 +154,7 @@ if ~exist('calcdose', 'var') || isempty(calcdose)
             if exist('Event', 'file') == 2
                 Event(['The config.txt file could not be opened. Verify that this ', ...
                     'file exists in the working directory. See documentation for ', ...
-                    'more information.'], 'WARN');
+                    'more information'], 'WARN');
             end
             
             % Set calcdose flag
@@ -258,7 +258,7 @@ if ~exist('calcdose', 'var') || isempty(calcdose)
 
             % Log missing config options
             if exist('Event', 'file') == 2
-                Event('The necessary config.txt options were not present.', ...
+                Event('The necessary config.txt options were not present', ...
                     'WARN');
             end
 
