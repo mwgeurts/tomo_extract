@@ -21,7 +21,10 @@ function dose = CalcDose(varargin)
 % second and third are the username and password, respectively.  This user 
 % account must have SSH access rights, rights to execute sadose/gpusadose, 
 % and finally read/write access to the temp directory. Note, this function 
-% assumes that the remote computation server is unix-based.
+% assumes that the remote computation server is unix-based. If a config
+% file is not found, or does not contain the above content, and local 
+% executables are not present, this function will not be able to compute 
+% dose.
 %
 % Following execution, the CT image, folder, and SSH connection variables
 % are persisted, such that CalcDose may be executed again with only a new
@@ -151,12 +154,11 @@ if ~exist('calcdose', 'var') || isempty(calcdose)
             if exist('Event', 'file') == 2
                 Event(['The config.txt file could not be opened. Verify that this ', ...
                     'file exists in the working directory. See documentation for ', ...
-                    'more information.'], 'ERROR');
-            else
-                error(['The config.txt file could not be opened. Verify that this ', ...
-                    'file exists in the working directory. See documentation for ', ...
-                    'more information.']);
+                    'more information.'], 'WARN');
             end
+            
+            % Set calcdose flag
+            calcdose = 0;
         end
         
         % Scan config file contents
@@ -164,6 +166,9 @@ if ~exist('calcdose', 'var') || isempty(calcdose)
         
         % Close file handle
         fclose(fid);
+        
+        % Initialize config structure
+        config = struct;
         
         % Loop through textscan array, separating key/value pairs into array
         for i = 1:2:length(c{1})
@@ -178,75 +183,89 @@ if ~exist('calcdose', 'var') || isempty(calcdose)
             Event('Loaded config.txt parameters');
         end
         
-        % A try/catch statement is used in case Ganymed-SSH2 or the remote 
-        % calculation server is not available
-        try
-            
-            % Log start of javalib loading
-            if exist('Event', 'file') == 2
-                Event('Adding Ganymed-SSH2 javalib');
-            end
-            
-            % Determine path of current executable
-            [path, ~, ~] = fileparts(mfilename('fullpath'));
-            
-            % Verify javalib path exists
-            if ~isdir(fullfile(path, 'ssh2_v2_m1_r6/'))
-                Event('Ganymed-SSH2 javalib path is missing', 'ERROR');
-            end
+        % If remote calc server settings were provided
+        if isfield(config, 'REMOTE_CALC_SERVER') && ...
+                isfield(config, 'REMOTE_CALC_USER') && ...
+                isfield(config, 'REMOTE_CALC_PASS')
+        
+            % A try/catch statement is used in case Ganymed-SSH2 or the remote 
+            % calculation server is not available
+            try
 
-            % Load Ganymed-SSH2 javalib
-            addpath(fullfile(path, 'ssh2_v2_m1_r6/')); 
-            
-            % Log completion
-            if exist('Event', 'file') == 2
-                Event('Ganymed-SSH2 javalib added successfully');
-            end
-            
-            % Establish connection to computation server.  The ssh2_config
-            % parameters below should be set to the DNS/IP address of the
-            % computation server, user name, and password with SSH/SCP and
-            % read/write access, respectively.  See the README for more 
-            % infomation
-            if exist('Event', 'file') == 2
-                Event(['Connecting to ', config.REMOTE_CALC_SERVER, ...
-                    ' via SSH2']);
-            end
-            ssh2 = ssh2_config(config.REMOTE_CALC_SERVER, ...
-                config.REMOTE_CALC_USER, config.REMOTE_CALC_PASS);
+                % Log start of javalib loading
+                if exist('Event', 'file') == 2
+                    Event('Adding Ganymed-SSH2 javalib');
+                end
 
-            % Test the SSH2 connection.  If this fails, catch the error 
-            % below.
-            [ssh2, ~] = ssh2_command(ssh2, 'ls');
-            if exist('Event', 'file') == 2
-                Event('SSH2 connection successfully established');
-            end
-            
-            % Set calcdose variable
-            calcdose = 1;
+                % Determine path of current executable
+                [path, ~, ~] = fileparts(mfilename('fullpath'));
 
-            % Clear temporary variables
-            clear path;
-            
-        % addpath, ssh2_config, or ssh2_command may all fail if ganymed is
-        % not available or if the remote server is not responding
-        catch err
+                % Verify javalib path exists
+                if ~isdir(fullfile(path, 'ssh2_v2_m1_r6/'))
+                    Event('Ganymed-SSH2 javalib path is missing', 'WARN');
+                end
 
-            % Log failure
-            if exist('Event', 'file') == 2
-                Event(getReport(err, 'extended', 'hyperlinks', 'off'), ...
-                    'WARN');
-            else
-                rethrow(err);
+                % Load Ganymed-SSH2 javalib
+                addpath(fullfile(path, 'ssh2_v2_m1_r6/')); 
+
+                % Log completion
+                if exist('Event', 'file') == 2
+                    Event('Ganymed-SSH2 javalib added successfully');
+                end
+
+                % Establish connection to computation server.  The ssh2_config
+                % parameters below should be set to the DNS/IP address of the
+                % computation server, user name, and password with SSH/SCP and
+                % read/write access, respectively.  See the README for more 
+                % infomation
+                if exist('Event', 'file') == 2
+                    Event(['Connecting to ', config.REMOTE_CALC_SERVER, ...
+                        ' via SSH2']);
+                end
+                ssh2 = ssh2_config(config.REMOTE_CALC_SERVER, ...
+                    config.REMOTE_CALC_USER, config.REMOTE_CALC_PASS);
+
+                % Test the SSH2 connection.  If this fails, catch the error 
+                % below.
+                [ssh2, ~] = ssh2_command(ssh2, 'ls');
+                if exist('Event', 'file') == 2
+                    Event('SSH2 connection successfully established');
+                end
+
+                % Set calcdose flag
+                calcdose = 1;
+
+                % Clear temporary variables
+                clear path;
+
+            % addpath, ssh2_config, or ssh2_command may all fail if ganymed is
+            % not available or if the remote server is not responding
+            catch err
+
+                % Log failure
+                if exist('Event', 'file') == 2
+                    Event(getReport(err, 'extended', 'hyperlinks', 'off'), ...
+                        'WARN');
+                end
+
+                % Set calcdose flag
+                calcdose = 0;
             end
-            
-            % Set calcdose temporary flag
-            calcdose = 0;
         end
-    end
 
-    % Clear temporary variables
-    clear status cmdout;
+        % Clear temporary variables
+        clear status cmdout;
+    else
+    
+        % Log missing config options
+        if exist('Event', 'file') == 2
+            Event('The necessary config.txt options were not present.', ...
+                'WARN');
+        end
+        
+        % Set calcdose flag
+        calcdose = 0;
+    end
 end
 
 % If no inputs provided, return calcdose flag
@@ -291,6 +310,17 @@ else
     else
         error(['An incorrect number of input arguments were passed to', ...
             ' CalcDose']);
+    end
+end
+
+% If dose calculation is not available, throw an error
+if calcdose == 0
+    if exist('Event', 'file') == 2
+        Event(['Neither a local nor remote calculation engine could be ', ...
+            'established. Dose calculation is not possible.'], 'ERROR');
+    else
+        error(['Neither a local nor remote calculation engine could be ', ...
+            'established. Dose calculation is not possible.']);
     end
 end
 
