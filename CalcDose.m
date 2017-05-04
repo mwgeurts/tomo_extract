@@ -251,20 +251,20 @@ if ~exist('calcdose', 'var') || isempty(calcdose)
                 % Set calcdose flag
                 calcdose = 0;
             end
-        end
 
-        % Clear temporary variables
-        clear status cmdout;
-    else
-    
-        % Log missing config options
-        if exist('Event', 'file') == 2
-            Event('The necessary config.txt options were not present.', ...
-                'WARN');
+            % Clear temporary variables
+            clear status cmdout;
+        else
+
+            % Log missing config options
+            if exist('Event', 'file') == 2
+                Event('The necessary config.txt options were not present.', ...
+                    'WARN');
+            end
+
+            % Set calcdose flag
+            calcdose = 0;
         end
-        
-        % Set calcdose flag
-        calcdose = 0;
     end
 end
 
