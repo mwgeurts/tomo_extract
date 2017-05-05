@@ -169,111 +169,112 @@ if ~exist('calcdose', 'var') || isempty(calcdose)
             
             % Set calcdose flag
             calcdose = 0;
-        end
+        else
         
-        % Scan config file contents
-        c = textscan(fid, '%s', 'Delimiter', '=');
-        
-        % Close file handle
-        fclose(fid);
-        
-        % Initialize config structure
-        config = struct;
-        
-        % Loop through textscan array, separating key/value pairs into array
-        for i = 1:2:length(c{1})
-            config.(strtrim(c{1}{i})) = strtrim(c{1}{i+1});
-        end
-        
-        % Clear temporary variables
-        clear c i fid;
-        
-        % Log completion
-        if exist('Event', 'file') == 2
-            Event('Loaded config.txt parameters');
-        end
-        
-        % If remote calc server settings were provided
-        if isfield(config, 'REMOTE_CALC_SERVER') && ...
-                isfield(config, 'REMOTE_CALC_USER') && ...
-                isfield(config, 'REMOTE_CALC_PASS')
-        
-            % A try/catch statement is used in case Ganymed-SSH2 or the remote 
-            % calculation server is not available
-            try
+            % Scan config file contents
+            c = textscan(fid, '%s', 'Delimiter', '=');
 
-                % Log start of javalib loading
-                if exist('Event', 'file') == 2
-                    Event('Adding Ganymed-SSH2 javalib');
+            % Close file handle
+            fclose(fid);
+
+            % Initialize config structure
+            config = struct;
+
+            % Loop through textscan array, separating key/value pairs into array
+            for i = 1:2:length(c{1})
+                config.(strtrim(c{1}{i})) = strtrim(c{1}{i+1});
+            end
+
+            % Clear temporary variables
+            clear c i fid;
+
+            % Log completion
+            if exist('Event', 'file') == 2
+                Event('Loaded config.txt parameters');
+            end
+
+            % If remote calc server settings were provided
+            if isfield(config, 'REMOTE_CALC_SERVER') && ...
+                    isfield(config, 'REMOTE_CALC_USER') && ...
+                    isfield(config, 'REMOTE_CALC_PASS')
+
+                % A try/catch statement is used in case Ganymed-SSH2 or the remote 
+                % calculation server is not available
+                try
+
+                    % Log start of javalib loading
+                    if exist('Event', 'file') == 2
+                        Event('Adding Ganymed-SSH2 javalib');
+                    end
+
+                    % Determine path of current executable
+                    [path, ~, ~] = fileparts(mfilename('fullpath'));
+
+                    % Verify javalib path exists
+                    if ~isdir(fullfile(path, 'ssh2_v2_m1_r6/'))
+                        Event('Ganymed-SSH2 javalib path is missing', 'WARN');
+                    end
+
+                    % Load Ganymed-SSH2 javalib
+                    addpath(fullfile(path, 'ssh2_v2_m1_r6/')); 
+
+                    % Log completion
+                    if exist('Event', 'file') == 2
+                        Event('Ganymed-SSH2 javalib added successfully');
+                    end
+
+                    % Establish connection to computation server.  The ssh2_config
+                    % parameters below should be set to the DNS/IP address of the
+                    % computation server, user name, and password with SSH/SCP and
+                    % read/write access, respectively.  See the README for more 
+                    % infomation
+                    if exist('Event', 'file') == 2
+                        Event(['Connecting to ', config.REMOTE_CALC_SERVER, ...
+                            ' via SSH2']);
+                    end
+                    ssh2 = ssh2_config(config.REMOTE_CALC_SERVER, ...
+                        config.REMOTE_CALC_USER, config.REMOTE_CALC_PASS);
+
+                    % Test the SSH2 connection.  If this fails, catch the error 
+                    % below.
+                    [ssh2, ~] = ssh2_command(ssh2, 'ls');
+                    if exist('Event', 'file') == 2
+                        Event('SSH2 connection successfully established');
+                    end
+
+                    % Set calcdose flag
+                    calcdose = 1;
+
+                    % Clear temporary variables
+                    clear path;
+
+                % addpath, ssh2_config, or ssh2_command may all fail if ganymed is
+                % not available or if the remote server is not responding
+                catch err
+
+                    % Log failure
+                    if exist('Event', 'file') == 2
+                        Event(getReport(err, 'extended', 'hyperlinks', 'off'), ...
+                            'WARN');
+                    end
+
+                    % Set calcdose flag
+                    calcdose = 0;
                 end
-
-                % Determine path of current executable
-                [path, ~, ~] = fileparts(mfilename('fullpath'));
-
-                % Verify javalib path exists
-                if ~isdir(fullfile(path, 'ssh2_v2_m1_r6/'))
-                    Event('Ganymed-SSH2 javalib path is missing', 'WARN');
-                end
-
-                % Load Ganymed-SSH2 javalib
-                addpath(fullfile(path, 'ssh2_v2_m1_r6/')); 
-
-                % Log completion
-                if exist('Event', 'file') == 2
-                    Event('Ganymed-SSH2 javalib added successfully');
-                end
-
-                % Establish connection to computation server.  The ssh2_config
-                % parameters below should be set to the DNS/IP address of the
-                % computation server, user name, and password with SSH/SCP and
-                % read/write access, respectively.  See the README for more 
-                % infomation
-                if exist('Event', 'file') == 2
-                    Event(['Connecting to ', config.REMOTE_CALC_SERVER, ...
-                        ' via SSH2']);
-                end
-                ssh2 = ssh2_config(config.REMOTE_CALC_SERVER, ...
-                    config.REMOTE_CALC_USER, config.REMOTE_CALC_PASS);
-
-                % Test the SSH2 connection.  If this fails, catch the error 
-                % below.
-                [ssh2, ~] = ssh2_command(ssh2, 'ls');
-                if exist('Event', 'file') == 2
-                    Event('SSH2 connection successfully established');
-                end
-
-                % Set calcdose flag
-                calcdose = 1;
 
                 % Clear temporary variables
-                clear path;
+                clear status cmdout;
+            else
 
-            % addpath, ssh2_config, or ssh2_command may all fail if ganymed is
-            % not available or if the remote server is not responding
-            catch err
-
-                % Log failure
+                % Log missing config options
                 if exist('Event', 'file') == 2
-                    Event(getReport(err, 'extended', 'hyperlinks', 'off'), ...
+                    Event('The necessary config.txt options were not present', ...
                         'WARN');
                 end
 
                 % Set calcdose flag
                 calcdose = 0;
             end
-
-            % Clear temporary variables
-            clear status cmdout;
-        else
-
-            % Log missing config options
-            if exist('Event', 'file') == 2
-                Event('The necessary config.txt options were not present', ...
-                    'WARN');
-            end
-
-            % Set calcdose flag
-            calcdose = 0;
         end
     end
 end
@@ -1014,19 +1015,19 @@ if fid >= 3
 
             % Upsample dataset back to CT resolution using nearest neighbor
             % interpolation.  
-            dose.data(1:(image.dimensions(1)-(d-1)), ...
-                1:(image.dimensions(2)-(d-1)), i) = ...
-                interp2(tempdose(:,:,i), 1:1/d:size(tempdose,2), ...
-                (1:1/d:size(tempdose,1))', 'nearest');
+            dose.data(:,:,i) = interp2(tempdose(:,:,i), ...
+                0.4999+1/d:1/d:image.dimensions(2)/d+0.4999, ...
+                (0.4999+1/d:1/d:image.dimensions(1)/d+0.4999)', 'nearest');
         end
 
-        % Replicate last rows and columns (since they are not interpolated)
-        for i = 0:d-2
-            dose.data(image.dimensions(1) - i, :, :) = ...
-                dose.data(image.dimensions(1) - (d - 1), :, :);
-            dose.data(:, image.dimensions(2) - i, :) = ...
-                dose.data(:, image.dimensions(2) - (d - 1), :);
-        end
+        % Replicate the first and last rows and columns (since they are not 
+        % interpolated)
+        dose.data(1:d/2, :, :) = repmat(dose.data(d/2+1, :, :), d/2, 1, 1);
+        dose.data(:, 1:d/2, :) = repmat(dose.data(:, d/2+1, :), 1, d/2, 1);
+        dose.data(end-d/2+1:end, :, :) = ...
+            repmat(dose.data(end-d/2, :, :), d/2, 1, 1);
+        dose.data(:, end-d/2+1:end, :) = ...
+            repmat(dose.data(:, end-d/2, :), 1, d/2, 1);
     else
         % If no downsampling occurred, simply copy tempdose
         dose.data = tempdose;
