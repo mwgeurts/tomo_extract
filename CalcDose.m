@@ -300,32 +300,32 @@ elseif nargin >= 2
     plan = varargin{2};    
     
     % Default sadose to 0 (force use of gpusadose)
-    if ~isset(sadose)
+    if isempty(sadose)
         sadose = 0;
     end
     
     % Default modelfolder to ./GPU
-    if ~isset(modelfolder)
+    if isempty(modelfolder)
         modelfolder = './GPU';
     end
     
     % Default supersample to 0
-    if ~isset(supersample)
+    if isempty(supersample)
         supersample = 0;
     end
     
     % Default downsample to 0
-    if ~isset(downsample)
+    if isempty(downsample)
         downsample = 0;
     end
     
     % Default azimuths to 4
-    if ~isset(azimuths)
+    if isempty(azimuths)
         azimuths = 4;
     end
     
     % Default raysteps to 1
-    if ~isset(raysteps)
+    if isempty(raysteps)
         raysteps = 4;
     end
     
