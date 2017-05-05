@@ -37,27 +37,36 @@ function dose = CalcDose(varargin)
 % IECY directions, then upsampled (using nearest neighbor interpolation) 
 % back to the original CT resolution following calculation.  To speed up 
 % calculation, the dose can be further downsampled by adjusting the 
-% downsample variable declaration in the code below, where downsample must 
-% be an even divisor of the CT dimensions (1, 2, 4, etc).  
+% downsample input arguument (see below for input options).
 %
 % Contact Accuray Incorporated to see if your research workstation includes 
 % the TomoTherapy Standalone Dose Calculator.
 %
-% The following variables are required for proper execution: 
+% The following variables are required for proper execution. If called with
+% zero elements, CalcDose will check for the presence of a calculation
+% engine and return a flag indicating whether one was found. Note that all
+% input options are stored persistently, so do not need to be passed with
+% each execution.
 %   image (optional): cell array containing the CT image to be calculated 
 %       on. The following fields are required, data (3D array), width (in 
 %       cm), start (in cm), dimensions (3 element vector), and ivdt (2 x n 
 %       array of CT and density value)
-%   plan (optional): delivery plan structure including scale, tau, lower 
+%   plan: delivery plan structure including scale, tau, lower 
 %       leaf index, number of projections, number of leaves, sync/unsync 
 %       actions, and leaf sinogram. May optionally include a 6-element 
 %       registration vector.
-%   modelfolder (optional): string containing the path to the beam model 
-%       files (dcom.header, fat.img, kernel.img, etc.)
-%   sadose (optional): flag indicating whether to call sadose or gpusadose.
+%   varargin{3:n}: name/value pairs of input options. Names may include 
+%       'modelfolder', 'sadose', 'downsample', 'azimuths', 'raysteps', or 
+%       'supersample'. The value
+%       for 'modelfolder' is a string containing the path to the beam model 
+%       files (dcom.header, fat.img, kernel.img, etc.). The value for 
+%       'sadose' is a flag indicating whether to call sadose or gpusadose.
 %       If not provided, defaults to 0 (gpusadose). CPU calculation should 
 %       only be used if non-analytic scatter kernels are necessary, as it 
-%       will significantly slow down dose calculation.
+%       will significantly slow down dose calculation. The value for
+%       'downsample' should be an integer that is an even divisor of the CT
+%       resolution. The value for 'supersample' should be a logical (0 or
+%       1) indicating whether to downsample.
 %
 % The following variables are returned upon succesful completion:
 %   dose: If inputs are provided, a cell array contaning the dose volume.  
@@ -73,16 +82,16 @@ function dose = CalcDose(varargin)
 %   flag = CalcDose();
 %
 %   % Calculate dose, passing image, plan, and model folder inputs
-%   dose = CalcDose(image, plan, modelfolder);
+%   dose = CalcDose(image, plan, 'modelfolder', './GPU');
 %
 %   % Calculate dose on same image as above, using modified plan modplan
 %   dose = CalcDose(modplan);
 %
 %   % Calculate dose again, but using sadose rather than gpusadose
-%   dose = CalcDose(image, modplan, modelfolder, 1);
+%   dose = CalcDose(image, modplan, 'sadose', 1);
 %
 % Author: Mark Geurts, mark.w.geurts@gmail.com
-% Copyright (C) 2015 University of Wisconsin Board of Regents
+% Copyright (C) 2017 University of Wisconsin Board of Regents
 %
 % This program is free software: you can redistribute it and/or modify it 
 % under the terms of the GNU General Public License as published by the  
@@ -99,7 +108,8 @@ function dose = CalcDose(varargin)
 
 % Store calcdose flag, temporary folder, image array, plan array, and ssh2 
 % connection for subsequent calculations
-persistent calcdose folder remotefolder modelfolder image sadose ssh2;
+persistent calcdose folder remotefolder modelfolder image sadose ssh2 ...
+    azimuths raysteps downsample supersample;
 
 % If dose calculation capability has not yet been determined 
 if ~exist('calcdose', 'var') || isempty(calcdose)
@@ -281,35 +291,60 @@ elseif nargin == 1
     % Store the plan variable
     plan = varargin{1};
     
-% Otherwise, store image, plan, and model folder input arguments and assume
+% Otherwise, store image, plan, and loop through remaining options
 % GPU algorithm and local dose calculation
-elseif nargin == 3
+elseif nargin >= 2
     
     % Store image, plan, and beam model folder variables
     image = varargin{1};
     plan = varargin{2};    
-    modelfolder = varargin{3};
     
     % Default sadose to 0 (force use of gpusadose)
-    sadose = 0;
+    if ~isset(sadose)
+        sadose = 0;
+    end
     
-% Otherwise, store image, plan, model folder, and ssh2 input arguments
-elseif nargin == 4
+    % Default modelfolder to ./GPU
+    if ~isset(modelfolder)
+        modelfolder = './GPU';
+    end
     
-    % Store image, plan, beam model folder, and ssh2 connection variables
-    image = varargin{1};
-    plan = varargin{2};
-    modelfolder = varargin{3};
-    sadose = varargin{4};
-
-% If zero, two, or more than four arguments passed, log error
-else
-    if exist('Event', 'file') == 2
-        Event(['An incorrect number of input arguments were passed to', ...
-            ' CalcDose'], 'ERROR');
-    else
-        error(['An incorrect number of input arguments were passed to', ...
-            ' CalcDose']);
+    % Default supersample to 0
+    if ~isset(supersample)
+        supersample = 0;
+    end
+    
+    % Default downsample to 0
+    if ~isset(downsample)
+        downsample = 0;
+    end
+    
+    % Default azimuths to 4
+    if ~isset(azimuths)
+        azimuths = 4;
+    end
+    
+    % Default raysteps to 1
+    if ~isset(raysteps)
+        raysteps = 4;
+    end
+    
+    % Loop through remaining arguments
+    for i = 3:2:length(varargin)
+        
+        if strcmpi(varargin{i}, 'sadose')
+            sadose = varargin{i+1};
+        elseif strcmpi(varargin{i}, 'modelfolder')
+            modelfolder = varargin{i+1};
+        elseif strcmpi(varargin{i}, 'supersample')
+            supersample = varargin{i+1};
+        elseif strcmpi(varargin{i}, 'downsample')
+            downsample = varargin{i+1};
+        elseif strcmpi(varargin{i}, 'azimuths')
+            azimuths = varargin{i+1};
+        elseif strcmpi(varargin{i}, 'raysteps')
+            raysteps = varargin{i+1};
+        end
     end
 end
 
@@ -328,13 +363,19 @@ end
 try 
  
 %% Apply downsampling
-% Downsampling factor.  Dose calculation is known to fail for
-% high resolution images sets (when numel > 4e7) due to memory issues on 
-% most Accuray research workstations.
-if numel(image.data) >= 4e7
-    downsample = 2;
+% Downsampling factor if set to auto (0).  Dose calculation is known to 
+% fail forhigh resolution images sets (when numel > 4e7) due to memory 
+% issues on most Accuray research workstations.
+if downsample == 0
+    if numel(image.data) >= 4e7
+        d = 2;
+    else
+        d = 1;
+    end
+    
+% If not auto, use provided downsampling factor    
 else
-    downsample = 1;
+    d = downsample;
 end
 
 %% Verify registration
@@ -355,7 +396,7 @@ if plan.registration(1) ~= 0 || plan.registration(2) ~= 0
 end
 
 % Test if the downsample factor is valid
-if mod(image.dimensions(1), downsample) ~= 0
+if mod(image.dimensions(1), d) ~= 0
     if exist('Event', 'file') == 2
         Event(['The downsample factor is not an even divisor of the ', ...
             'image dimensions'], 'ERROR');
@@ -368,8 +409,8 @@ end
 %% Start dose calculation
 % Log beginning of dose calculation and start timer
 if exist('Event', 'file') == 2
-    Event(sprintf('Beginning dose calculation using downsampling factor of %i', ...
-        downsample));
+    Event(sprintf(['Beginning dose calculation using downsampling ', ...
+        'factor of %i'], d));
     tic
 end
 
@@ -505,45 +546,54 @@ if nargin >= 2
     fprintf(fid, 'dose.cache.path=/var/cache/tomo\n');
 
     % Write the dose image x/y dimensions, start coordinates, and voxel
-    % sizes based on the CT values (by downsample). Note that the dose 
+    % sizes based on the CT values (by d). Note that the dose 
     % calculator assumes the z values based on the CT.
-    fprintf(fid, 'dose.grid.dim.x=%i\n', image.dimensions(1)/downsample);
-    fprintf(fid, 'dose.grid.dim.y=%i\n', image.dimensions(2)/downsample);
+    fprintf(fid, 'dose.grid.dim.x=%i\n', image.dimensions(1)/d);
+    fprintf(fid, 'dose.grid.dim.y=%i\n', image.dimensions(2)/d);
     fprintf(fid, 'dose.grid.start.x=%G\n', image.start(1) - image.width(1)/2);
     fprintf(fid, 'dose.grid.start.y=%G\n', image.start(2) - image.width(2)/2);
-    fprintf(fid, 'dose.grid.width.x=%G\n', image.width(1)*downsample);
-    fprintf(fid, 'dose.grid.width.y=%G\n', image.width(2)*downsample);
+    fprintf(fid, 'dose.grid.width.x=%G\n', image.width(1)*d);
+    fprintf(fid, 'dose.grid.width.y=%G\n', image.width(2)*d);
 
-    % Turn off supersampling.  When sampleAngleMotion is set to false, the
-    % dose for each projection will be calculated at only one point (in the
-    % center) of the projection.  This will speed up dose calculation
-    fprintf(fid, 'dose.sampleAngleMotion=false\n');
+    % Turn on or off supersampling.  When sampleAngleMotion is set to 
+    % false, the dose for each projection will be calculated at only one 
+    % point (in the center) of the projection.  This will speed up dose 
+    % calculation
+    if supersample == 1
+        fprintf(fid, 'dose.sampleAngleMotion=true\n');
+    else
+        fprintf(fid, 'dose.sampleAngleMotion=false\n');
+    end
 
     % Reduce the number of azimuthal angles per zenith angle to 4.  This
     % will speed up dose calculation
-    fprintf(fid, 'dose.azimuths=4\n');
+    fprintf(fid, 'dose.azimuths=%i\n', azimuths);
 
     % Reduce fluence rate/steps to 1. This will also speed up dose 
     % calculation
-    fprintf(fid, 'dose.xRayRate=1\n');
-    fprintf(fid, 'dose.zRayRate=1\n');
+    fprintf(fid, 'dose.xRayRate=%i\n', raysteps);
+    fprintf(fid, 'dose.zRayRate=%i\n', raysteps);
     
     % If using gpusadose, write nvbb settings
     if sadose == 0
         
-        % Turn off supersampling
-        fprintf(fid, 'nvbb.sourceSuperSample=0\n');
+        % Turn on or off supersampling
+        if supersample == 1
+            fprintf(fid, 'nvbb.sourceSuperSample=1\n');
+        else
+            fprintf(fid, 'nvbb.sourceSuperSample=0\n');
+        end
         
         % Reduce the number of azimuthal angles per zenith angle to 4.  
         % This will speed up dose calculation
-        fprintf(fid, 'nvbb.azimuths=4\n');
+        fprintf(fid, 'nvbb.azimuths=%i\n', azimuths);
 
         % Reduce fluence rate/steps to 1. This will also speed up dose 
         % calculation
-        fprintf(fid, 'nvbb.fluenceXRate=1\n');
-        fprintf(fid, 'nvbb.fluenceZRate=1\n');
-        fprintf(fid, 'nvbb.fluenceXStep=1\n');
-        fprintf(fid, 'nvbb.fluenceZStep=1\n');
+        fprintf(fid, 'nvbb.fluenceXRate=%i\n', raysteps);
+        fprintf(fid, 'nvbb.fluenceZRate=%i\n', raysteps);
+        fprintf(fid, 'nvbb.fluenceXStep=%i\n', raysteps);
+        fprintf(fid, 'nvbb.fluenceZStep=%i\n', raysteps);
     end
     
     % Configure the dose calculator to write the resulting dose array to
@@ -935,10 +985,10 @@ if fid >= 3
     end
 
     % Read the dose image into tempdose
-    tempdose = reshape(fread(fid, image.dimensions(1)/downsample * ...
-        image.dimensions(2)/downsample * image.dimensions(3), 'single', ...
-        0, 'l'), image.dimensions(1)/downsample, ...
-        image.dimensions(2)/downsample, image.dimensions(3));
+    tempdose = reshape(fread(fid, image.dimensions(1)/d * ...
+        image.dimensions(2)/d * image.dimensions(3), 'single', ...
+        0, 'l'), image.dimensions(1)/d, ...
+        image.dimensions(2)/d, image.dimensions(3));
 
     % Close file handle
     fclose(fid);
@@ -951,12 +1001,12 @@ if fid >= 3
 
     % Since the downsampling is only in the axial plane, loop through each 
     % IEC-Y slice
-    if downsample > 1
+    if d > 1
 
         % Log interpolation step
         if exist('Event', 'file') == 2
             Event(sprintf(['Upsampling calculated dose image by %i using ', ...
-                'nearest neighbor interpolation'], downsample));
+                'nearest neighbor interpolation'], d));
         end
 
         % Loop through each axial dose slice
@@ -965,15 +1015,15 @@ if fid >= 3
             % Upsample dataset back to CT resolution using nearest neighbor
             % interpolation.  
             dose.data(1:image.dimensions(1)-1, 1:image.dimensions(2)-1, i) = ...
-                interp2(tempdose(:,:,i), downsample - 1, 'nearest');
+                interp2(tempdose(:,:,i), d - 1, 'nearest');
         end
 
         % Replicate last rows and columns (since they are not interpolated)
-        for i = 0:downsample-2
+        for i = 0:d-2
             dose.data(image.dimensions(1) - i, :, :) = ...
-                dose.data(image.dimensions(1) - (downsample - 1), :, :);
+                dose.data(image.dimensions(1) - (d - 1), :, :);
             dose.data(:, image.dimensions(2) - i, :) = ...
-                dose.data(:, image.dimensions(2) - (downsample - 1), :);
+                dose.data(:, image.dimensions(2) - (d - 1), :);
         end
     else
         % If no downsampling occurred, simply copy tempdose
@@ -981,7 +1031,7 @@ if fid >= 3
     end
 
     % Clear temporary variables
-    clear i tempdose;
+    clear i tempdose d;
 
     % Copy dose image start, width, and dimensions from CT image
     dose.start = image.start;
