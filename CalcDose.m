@@ -327,7 +327,7 @@ elseif nargin >= 2
     
     % Default raysteps to 1
     if isempty(raysteps)
-        raysteps = 4;
+        raysteps = 1;
     end
     
     % Loop through remaining arguments
