@@ -10,7 +10,7 @@ function plans = FindPlans(varargin)
 %       all plan types are returned.
 %
 % The following variable is returned upon succesful completion:
-%   plans: cell array of approved plan UIDs
+%   plans: cell array of approved plan UIDs and plan labels
 %
 % Below is an example of how this function is used:
 %
@@ -74,7 +74,7 @@ expression = ...
 nodeList = expression.evaluate(doc, XPathConstants.NODESET);
 
 % Preallocate cell array
-plans = cell(1, nodeList.getLength);
+plans = cell(2, nodeList.getLength);
 
 % Log number of delivery plans found
 if exist('Event', 'file') == 2
@@ -167,18 +167,36 @@ for i = 1:nodeList.getLength
     subnode = subnodeList.item(0);
     
     % Store the plan UID
-    plans{i} = char(subnode.getFirstChild.getNodeValue);
+    plans{i, 1} = char(subnode.getFirstChild.getNodeValue);
+    
+    % Search for plan label
+    subexpression = xpath.compile('planLabel');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If plan label was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+    
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+    
+    % Store the plan label
+    plans{i, 2} = char(subnode.getFirstChild.getNodeValue);
 end
+
+% Remove empty cells due invalid plans
+p = plans';
+plans = reshape(p(~cellfun(@isempty, p)), 2, [])';
 
 % Clear temporary variables
 clear doc factory xpath i node subnode nodeList subnodeList expression ...
     subexpression;
 
-% Remove empty cells due invalid plans
-plans = plans(~cellfun('isempty', plans));
-
 % If no valid delivery plans were found
-if size(plans, 2) == 0
+if size(plans, 1) == 0
     
     % Throw a warning
     if exist('Event', 'file') == 2
@@ -191,7 +209,7 @@ else
     % Log completion
     if exist('Event', 'file') == 2
         Event(sprintf(['%i approved plans successfully identified in ', ...
-            '%0.3f seconds'], size(plans, 2), toc));
+            '%0.3f seconds'], size(plans, 1), toc));
     end
 end
 
