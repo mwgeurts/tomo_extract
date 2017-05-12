@@ -175,16 +175,17 @@ for i = 1:nodeList.getLength
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
 
-    % If plan label was found, continue to next result
+    % If plan label was found
     if subnodeList.getLength == 0
-        continue
+        plans{i, 2} = 'UNK';
+    else
+    
+        % Retrieve a handle to the results
+        subnode = subnodeList.item(0);
+
+        % Store the plan label
+        plans{i, 2} = char(subnode.getFirstChild.getNodeValue);
     end
-    
-    % Retrieve a handle to the results
-    subnode = subnodeList.item(0);
-    
-    % Store the plan label
-    plans{i, 2} = char(subnode.getFirstChild.getNodeValue);
 end
 
 % Remove empty cells due invalid plans
