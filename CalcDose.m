@@ -145,12 +145,13 @@ if ~exist('calcdose', 'var') || isempty(calcdose) || nargin == 0
         % Clear temporary variables
         clear str cellarr;
         
-    % Otherwise local dose calculation does not exist
-    else
+    % Otherwise local dose calculation does not exist and no connection has
+    % been established yet
+    elseif ~exist('ssh2', 'var') || isempty(ssh2)
 
         % Inform the user that remote server will be searched
         if exist('Event', 'file') == 2
-            Event(['Checking for remote computation server']);
+            Event('Establishing connection to remote computation server');
         end
         
         % Load configuration settings
@@ -261,9 +262,6 @@ if ~exist('calcdose', 'var') || isempty(calcdose) || nargin == 0
                     % Set calcdose flag
                     calcdose = 0;
                 end
-
-                % Clear temporary variables
-                clear status cmdout;
             else
 
                 % Log missing config options
@@ -276,7 +274,44 @@ if ~exist('calcdose', 'var') || isempty(calcdose) || nargin == 0
                 calcdose = 0;
             end
         end
+        
+    % Otherwise, if a remote connection has already been established
+    else
+        
+        % A try/catch statement is used in case Ganymed-SSH2 or the remote 
+        % calculation server is no longer available
+        try
+
+            % Test the SSH2 connection.  If this fails, catch the error 
+            % below.
+            [ssh2, ~] = ssh2_command(ssh2, 'ls');
+            if exist('Event', 'file') == 2
+                Event('SSH2 connection is alive');
+            end
+
+            % Set calcdose flag
+            calcdose = 1;
+
+        % addpath, ssh2_config, or ssh2_command may all fail if ganymed is
+        % not available or if the remote server is not responding
+        catch err
+
+            % Log failure
+            if exist('Event', 'file') == 2
+                Event(getReport(err, 'extended', 'hyperlinks', 'off'), ...
+                    'WARN');
+            end
+
+            % Set calcdose flag
+            calcdose = 0;
+            
+            % Clear SSH2 variable (to force a re-connection next time)
+            ssh2 = [];
+        end
     end
+    
+    % Clear temporary variables
+    clear status cmdout;
 end
 
 % If no inputs provided, return calcdose flag
