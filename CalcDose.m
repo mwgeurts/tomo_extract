@@ -111,8 +111,9 @@ function dose = CalcDose(varargin)
 persistent calcdose folder remotefolder modelfolder image sadose ssh2 ...
     azimuths raysteps downsample supersample;
 
-% If dose calculation capability has not yet been determined 
-if ~exist('calcdose', 'var') || isempty(calcdose)
+% If dose calculation capability has not yet been determined, or CalcDose
+% has been executed without any input arguments
+if ~exist('calcdose', 'var') || isempty(calcdose) || nargin == 0
     
     % If the local system is unix-based
     if isunix
@@ -147,10 +148,9 @@ if ~exist('calcdose', 'var') || isempty(calcdose)
     % Otherwise local dose calculation does not exist
     else
 
-        % Warn the user that gpusadose was not found
+        % Inform the user that remote server will be searched
         if exist('Event', 'file') == 2
-            Event(['Linked application gpusadose not found, will now ', ...
-                'check for remote computation server'], 'WARN');
+            Event(['Checking for remote computation server']);
         end
         
         % Load configuration settings
