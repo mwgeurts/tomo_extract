@@ -387,10 +387,9 @@ for i = 1:n
                     ' contains contours outside of image array'], 'WARN');
             end
 
-            % Store raw points, applying rotation vector and conversion to
+            % Store raw points, applying rotation vector to convert to
             % DICOM coordinate system
             structures{i}.points{j} = points .* ...
-                repmat(rot, size(points, 1), 1) .* ...
                 repmat([1,-1,-1], size(points,1), 1);
         end
     end
