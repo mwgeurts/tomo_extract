@@ -278,22 +278,6 @@ if exist('Event', 'file') == 2
         varargin{3}.structureSetUID));
 end
 
-% Apply image orientation rotation, if available (otherwise assume HFS)
-rot = [1,1,1];
-if isfield(varargin{3}, 'position')
-   
-    % Set rotation vector based on patient position
-    if strcmpi(varargin{3}.position, 'HFS')
-        rot = [1,1,1];
-    elseif strcmpi(varargin{3}.position, 'HFP')
-        rot = [-1,-1,1];
-    elseif strcmpi(varargin{3}.position, 'FFS')
-        rot = [-1,1,-1];
-    elseif strcmpi(varargin{3}.position, 'FFP')
-        rot = [1,-1,-1];
-    end
-end
-
 % Loop through the structures discovered
 for i = 1:n
     
@@ -426,7 +410,7 @@ structures = structures(~cellfun('isempty', structures));
 
 % Clear temporary variables
 clear n doc factory xpath expression nodeList subNode numpoints points ...
-    slice mask rot;
+    slice mask;
 
 % Log completion of function
 if exist('Event', 'file') == 2
