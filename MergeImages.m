@@ -1,4 +1,4 @@
-function merged = MergeImages(reference, daily, v)
+function merged = MergeImages(reference, daily, v, varargin)
 % MergeImages merges a daily image into a reference image by resampling the 
 % daily image to the reference image coordinate system, using a supplied 
 % registration vector and then using the reference image data outside the 
@@ -47,6 +47,18 @@ function merged = MergeImages(reference, daily, v)
 % 
 % You should have received a copy of the GNU General Public License along 
 % with this program. If not, see http://www.gnu.org/licenses/.
+
+% Initialize default options
+fill = true;
+
+% Loop through remaining input arguments
+for i = 4:2:length(varargin)
+
+    % Store provided options
+    if strcmpi(varargin{i}, 'fill')
+        fill = varargin{i+1};
+    end
+end
 
 % Start timer
 tic;
@@ -262,13 +274,16 @@ end
 % Clear temporary variables
 clear refX refY refZ secX secY secZ;
 
-%% Add surrounding reference data
 % Create (resampled) daily image mask using ceil()
 merged.mask = ceil(single(merged.data) / 65535);
 
-% Add reference data multiplied by inverse of daily mask
-merged.data = merged.data + reference.data .* ...
-    single(abs(merged.mask - 1));
+%% Add surrounding reference data
+if fill
+
+    % Add reference data multiplied by inverse of daily mask
+    merged.data = merged.data + reference.data .* ...
+        single(abs(merged.mask - 1));
+end
 
 %% Finish merge
 % Set merged image supporting parameters
