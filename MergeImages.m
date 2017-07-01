@@ -52,7 +52,7 @@ function merged = MergeImages(reference, daily, v, varargin)
 fill = true;
 
 % Loop through remaining input arguments
-for i = 4:2:length(varargin)
+for i = 1:2:length(varargin)
 
     % Store provided options
     if strcmpi(varargin{i}, 'fill')
