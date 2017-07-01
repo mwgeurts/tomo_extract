@@ -131,8 +131,10 @@ ref1 = ones(reference.dimensions);
 
 %% Generate meshgrids for daily image
 % Log start of mesh grid computation and dimensions
-Event(sprintf('Generating daily mesh grid with dimensions (%i %i %i 3)', ...
-    daily.dimensions));
+if exist('Event', 'file') == 2
+    Event(sprintf('Generating daily mesh grid with dimensions (%i %i %i 3)', ...
+        daily.dimensions));
+end
 
 % Generate x, y, and z grids using start and width structure fields (which
 % are stored in [x,z,y] format)
