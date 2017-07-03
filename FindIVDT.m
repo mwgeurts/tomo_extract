@@ -419,7 +419,7 @@ if exist('Event', 'file') == 2
 end
 
 % Search for all imaging equipment XMLs in the patient archive folder
-ivdtlist = dir(fullfile(path,'*_imagingequipment.xml'));
+ivdtlist = dir(fullfile(path,'*_imagingequipment*.xml'));
 ivdtnames = cell(0);
 
 % Loop through the image equipment XMLs
