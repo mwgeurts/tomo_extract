@@ -123,7 +123,7 @@ reference.data = interp1(daily.ivdt(:,2), daily.ivdt(:,1), ...
 %% Generate meshgrids for reference image
 % Log start of mesh grid computation and dimensions
 if exist('Event', 'file') == 2
-    Event(sprintf('Generating reference mesh grid with dimensions (%i %i %i 3)', ...
+    Event(sprintf('Generating reference mesh grid with dimensions (%i, %i, %i, 3)', ...
         reference.dimensions));
 end
 
@@ -144,7 +144,7 @@ ref1 = ones(reference.dimensions);
 %% Generate meshgrids for daily image
 % Log start of mesh grid computation and dimensions
 if exist('Event', 'file') == 2
-    Event(sprintf('Generating daily mesh grid with dimensions (%i %i %i 3)', ...
+    Event(sprintf('Generating daily mesh grid with dimensions (%i, %i, %i, 3)', ...
         daily.dimensions));
 end
 
