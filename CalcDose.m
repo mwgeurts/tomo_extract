@@ -13,7 +13,7 @@ function dose = CalcDose(varargin)
 % create a file named config.txt in the working directory with the 
 % following content (one is provided as an example in this repository): 
 %
-%   REMOTE_CALC_SERVER = tomo-research
+%   REMOTE_CALC_SERVER = ipaddress
 %   REMOTE_CALC_USER = username
 %   REMOTE_CALC_PASS = password
 %
@@ -175,9 +175,6 @@ if ~exist('calcdose', 'var') || isempty(calcdose) || nargin == 0
             % Scan config file contents
             c = textscan(fid, '%s', 'Delimiter', '=');
 
-            % Close file handle
-            fclose(fid);
-
             % Initialize config structure
             config = struct;
 
@@ -187,7 +184,7 @@ if ~exist('calcdose', 'var') || isempty(calcdose) || nargin == 0
             end
 
             % Clear temporary variables
-            clear c i fid;
+            clear c i;
 
             % Log completion
             if exist('Event', 'file') == 2
@@ -199,10 +196,29 @@ if ~exist('calcdose', 'var') || isempty(calcdose) || nargin == 0
                     isfield(config, 'REMOTE_CALC_USER') && ...
                     isfield(config, 'REMOTE_CALC_PASS')
 
+                % If the values are the default values
+                if (strcmpi(config.REMOTE_CALC_SERVER, 'ipaddress') || ...
+                        strcmpi(config.REMOTE_CALC_USER, 'username') || ...
+                        strcmpi(config.REMOTE_CALC_PASS, 'password')) && ...
+                        usejava('jvm') && feature('ShowFigureWindows')
+               
+                    % Prompt user to enter values
+                    a = inputdlg({'Server name: ', 'Username: ', ...
+                        'Password: '}, 'Enter Calculation Server Detauls', ...
+                        1, {config.REMOTE_CALC_SERVER, ...
+                        config.REMOTE_CALC_USER, config.REMOTE_CALC_PASS});
+                
+                    % Update values
+                    config.REMOTE_CALC_SERVER = a{1};
+                    config.REMOTE_CALC_USER = a{2};
+                    config.REMOTE_CALC_PASS = a{3};
+                    clear a;
+                end
+                    
                 % A try/catch statement is used in case Ganymed-SSH2 or the remote 
                 % calculation server is not available
                 try
-
+                    
                     % Log start of javalib loading
                     if exist('Event', 'file') == 2
                         Event('Adding Ganymed-SSH2 javalib');
@@ -274,6 +290,10 @@ if ~exist('calcdose', 'var') || isempty(calcdose) || nargin == 0
                 calcdose = 0;
             end
         end
+        
+        % Close and clear file handle
+        fclose(fid);
+        clear fid;
         
     % Otherwise, if a remote connection has already been established
     else
