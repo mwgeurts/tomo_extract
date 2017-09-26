@@ -291,7 +291,8 @@ if size(returnDQAData,2) == 0
         end
         
         % Request the user to select the DQA exit detector DICOM
-        [name, path] = uigetfile({'*.dcm', 'Transit Dose File (*.dcm)'}, ...
+        [name, path] = uigetfile({'*.dcm', 'Transit Dose File (*.dcm)'; ...
+            '*.dat', 'Compressed Detdata (*.dat)'}, ...
             'Select the Static-Couch DQA File', path);
     
     % Otherwise, throw an error
@@ -299,8 +300,8 @@ if size(returnDQAData,2) == 0
         error('No static couch data was found in patient archive.');
     end
     
-    % If the user selected a file
-    if ~isequal(name, 0)
+    % If the user selected a DICOM file
+    if ~isequal(name, 0) && regexpi(name, '\.dcm$') > 0
         
         % Log choice
         if exist('Event', 'file') == 2
@@ -437,12 +438,63 @@ if size(returnDQAData,2) == 0
         if exist('Event', 'file') == 2
             Event(['Static Couch QA successfully parsed from ', name]);
         end
+     
+    % If the user selected a Detdata file
+    elseif ~isequal(name, 0) && regexpi(name, '\.dat$') > 0
+        
+        % Log choice
+        if exist('Event', 'file') == 2
+            Event(['User selected ', name]);
+        end
+        
+        % rightTrim should be set to the channel in the exit detector data
+        % that corresponds to the last channel in the Daily QA data, and is
+        % easily calculated form leftTrim using the size of channelCal
+        rightTrim = size(channelCal, 2) + leftTrim - 1; 
+ 
+        % Execute ParseDetData to retrieve the detector data
+        data = ParseDetData(fullfile(path, name));
+
+        % Store an empty machine name
+        machine = '';
+        
+        % Set plan UID to UNKNOWN, informing the tool must auto-select
+        planUID = 'UNKNOWN';
+
+        % Set the variables startTrim and stopTrim to the length of the
+        % detdata file
+        startTrim = 1;
+        stopTrim = data.views;
+
+        % Set detdata by trimming the temporary array by leftTrim and 
+        % rightTrim channels (to match the QA data and leafMap) and 
+        % startTrim and stopTrim projections (to match the sinogram)
+        if exist('Event', 'file') == 2
+            Event(sprintf('Trimming compressed data to %i:%i, %i:%i', ...
+                leftTrim, rightTrim, startTrim, stopTrim));
+        end
+        detdata = data.detdata(startTrim:stopTrim, leftTrim:rightTrim)';
+        
+        % Divide each projection by channelCal to account for relative 
+        % channel sensitivity effects (see LoadFileQA.m for more info)
+        if exist('Event', 'file') == 2
+            Event('Correcting raw data by channel calibration');
+        end
+        detdata = detdata ./ (channelCal' * ones(1, size(detdata,2)));
+        
+        % Clear all temporary variables
+        clear data rightTrim startTrim stopTrim;
+    
+        % Log event
+        if exist('Event', 'file') == 2
+            Event(['Static Couch QA successfully parsed from ', name]);
+        end
         
     % Otherwise the user did not select a file
     else
         error(['No Static-Couch DQA data was loaded. The data must be ', ...
             'contained in the patient archive or loaded as a Transit ', ...
-            'Dose DICOM Exported file']);
+            'Dose DICOM or Compressed Detdata file']);
     end
     
 %% Otherwise, static couch QA data was found    
