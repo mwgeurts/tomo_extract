@@ -204,14 +204,16 @@ if ~exist('calcdose', 'var') || isempty(calcdose) || nargin == 0
                
                     % Prompt user to enter values
                     a = inputdlg({'Server name: ', 'Username: ', ...
-                        'Password: '}, 'Enter Calculation Server Detauls', ...
-                        1, {config.REMOTE_CALC_SERVER, ...
+                        'Password: '}, 'Enter Calculation Server Details', ...
+                        [1 80; 1 80; 1 80], {config.REMOTE_CALC_SERVER, ...
                         config.REMOTE_CALC_USER, config.REMOTE_CALC_PASS});
                 
-                    % Update values
-                    config.REMOTE_CALC_SERVER = a{1};
-                    config.REMOTE_CALC_USER = a{2};
-                    config.REMOTE_CALC_PASS = a{3};
+                    % Update values, if some were returned
+                    if ~isempty(a)
+                        config.REMOTE_CALC_SERVER = a{1};
+                        config.REMOTE_CALC_USER = a{2};
+                        config.REMOTE_CALC_PASS = a{3};
+                    end
                     clear a;
                 end
                     
