@@ -275,10 +275,10 @@ plans = FindPlans(path, name);
 
 This function will first attempt to calculate dose locally, if available (the system must support the which command).  If not found, the dose calculator inputs will be copied to a remote computation server via SCP and sadose/gpusadose executed via an initiated SSH connection. 
 
-To change the connection information for the remote computation server, create a file named config.txt in the working directory with the following content: 
+To change the connection information for the remote computation server, create a file named `config.txt` in the working directory with the following content (an example is provided with this repository): 
 
 ```text
-  REMOTE_CALC_SERVER = tomo-research
+  REMOTE_CALC_SERVER = ipaddress
   REMOTE_CALC_USER = username
   REMOTE_CALC_PASS = password
 ```
