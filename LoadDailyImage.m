@@ -151,9 +151,7 @@ case 'ARCHIVE'
         % Set patient sex
         image.patientSex = char(subnode.getFirstChild.getNodeValue);
     end
-    
-    
-        
+ 
     %% Load MVCT
     % Declare a new xpath search expression for all fullProcedureDataArrays
     expression = xpath.compile(['//fullProcedureDataArray/', ...
@@ -499,8 +497,8 @@ case 'ARCHIVE'
         end
 
         % Store the registration
-        image.registration(6) = ...
-            -str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+        image.registration(5) = ...
+            str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
         % Search for registration Z
         subexpression = xpath.compile(['fullCorrelationDataArray/', ...
@@ -515,7 +513,7 @@ case 'ARCHIVE'
         end
 
         % Store the registration
-        image.registration(5) = ...
+        image.registration(6) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
         % Search for registration pitch
