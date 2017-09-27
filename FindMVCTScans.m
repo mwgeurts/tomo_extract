@@ -180,7 +180,7 @@ for i = 1:nodeList.getLength
     % Retrieve a handle to this procedure
     node = nodeList.item(i-1);
 
-    % Search for procedureDataAnalysis
+    %% Search for procedureDataAnalysis
     subexpression = ...
         xpath.compile('procedure/briefProcedure/procedureDataAnalysis');
 
@@ -200,7 +200,7 @@ for i = 1:nodeList.getLength
         continue
     end
     
-    % Search for currentProcedureStatus
+    %% Search for currentProcedureStatus
     subexpression = ...
         xpath.compile('procedure/briefProcedure/currentProcedureStatus');
 
@@ -220,7 +220,7 @@ for i = 1:nodeList.getLength
         continue
     end
     
-    % Search for database parent UID
+    %% Search for database parent UID
     subexpression = ...
         xpath.compile('procedure/briefProcedure/dbInfo/databaseParent');
 
@@ -258,7 +258,7 @@ for i = 1:nodeList.getLength
     % If this procedure did not match a plan, continue to next procedure
     if plan == 0; continue; end
     
-    % Search for procedure database UID
+    %% Search for procedure database UID
     subexpression = ...
         xpath.compile('procedure/briefProcedure/dbInfo/databaseUID');
 
@@ -282,9 +282,9 @@ for i = 1:nodeList.getLength
     scans{plan}.date{k} = '';
     scans{plan}.time{k} = '';
     
-    % Search for scheduledStartDateTime date
+    %% Search for deliveryStartDateTime date
     subexpression = xpath.compile(['procedure/briefProcedure/', ...
-        'scheduledStartDateTime/date']);
+        'deliveryStartDateTime/date']);
 
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
@@ -299,9 +299,9 @@ for i = 1:nodeList.getLength
         scans{plan}.date{k} = char(subnode.getFirstChild.getNodeValue);
     end
     
-    % Search for scheduledStartDateTime time
+    %% Search for deliveryStartDateTime time
     subexpression = xpath.compile(['procedure/briefProcedure/', ...
-        'scheduledStartDateTime/time']);
+        'deliveryStartDateTime/time']);
 
     % Evaluate xpath expression and retrieve the results
     subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
@@ -316,7 +316,7 @@ for i = 1:nodeList.getLength
         scans{plan}.time{k} = char(subnode.getFirstChild.getNodeValue);
     end
     
-    % Search for machine calibration UID
+    %% Search for machine calibration UID
     subexpression = ...
         xpath.compile('procedure/scheduledProcedure/machineCalibration');
     
@@ -330,7 +330,7 @@ for i = 1:nodeList.getLength
     scans{plan}.machineCalibration{k} = ...
         char(subnode.getFirstChild.getNodeValue);
     
-    % Search for scanList
+    %% Search for scanList
     subexpression = xpath.compile(['procedure/scheduledProcedure/', ...
         'mvctData/scanList/scanList']);
 
@@ -380,7 +380,7 @@ for i = 1:nodeList.getLength
     scans{plan}.scanLengths(k, 2) = ...
         str2double(subnodeList.item(stop).getFirstChild.getNodeValue);
     
-    % Search for image data
+    %% Search for image data
     subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
         'image/arrayHeader/binaryFileName']);
     
@@ -398,7 +398,7 @@ for i = 1:nodeList.getLength
     % Store the binary file name
     scans{plan}.imageFiles{k} = char(subnode.getFirstChild.getNodeValue);
     
-    % Search for image X dimension
+    %% Search for image X dimension
     subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
         'image/arrayHeader/dimensions/x']);
     
@@ -414,7 +414,7 @@ for i = 1:nodeList.getLength
     scans{plan}.imageDim(k, 1) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
-    % Search for image Y dimension
+    %% Search for image Y dimension
     subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
         'image/arrayHeader/dimensions/y']);
     
@@ -426,7 +426,7 @@ for i = 1:nodeList.getLength
         continue
     end
     
-    % Store the image dimensions
+    %% Store the image dimensions
     scans{plan}.imageDim(k, 2) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
@@ -446,7 +446,7 @@ for i = 1:nodeList.getLength
     scans{plan}.imageDim(k, 3) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
-    % Search for image X start
+    %% Search for image X start
     subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
         'image/arrayHeader/start/x']);
     
@@ -462,7 +462,7 @@ for i = 1:nodeList.getLength
     scans{plan}.imageStart(k, 1) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
-    % Search for image Y start
+    %% Search for image Y start
     subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
         'image/arrayHeader/start/y']);
     
@@ -478,7 +478,7 @@ for i = 1:nodeList.getLength
     scans{plan}.imageStart(k, 2) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
-    % Search for image Z start
+    %% Search for image Z start
     subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
         'image/arrayHeader/start/z']);
     
@@ -494,7 +494,7 @@ for i = 1:nodeList.getLength
     scans{plan}.imageStart(k, 3) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
-    % Search for image X size
+    %% Search for image X size
     subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
         'image/arrayHeader/elementSize/x']);
     
@@ -510,7 +510,7 @@ for i = 1:nodeList.getLength
     scans{plan}.imageSize(k, 1) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
-    % Search for image Y size
+    %% Search for image Y size
     subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
         'image/arrayHeader/elementSize/y']);
     
@@ -526,7 +526,7 @@ for i = 1:nodeList.getLength
     scans{plan}.imageSize(k, 2) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
-    % Search for image Z size
+    %% Search for image Z size
     subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
         'image/arrayHeader/elementSize/z']);
     
@@ -542,7 +542,7 @@ for i = 1:nodeList.getLength
     scans{plan}.imageSize(k, 3) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
-    % Search for registration X
+    %% Search for registration X
     subexpression = xpath.compile(['fullCorrelationDataArray/', ...
         'fullCorrelationDataArray/correlation/displacement/x']);
     
@@ -558,7 +558,7 @@ for i = 1:nodeList.getLength
     scans{plan}.registration(k, 4) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
-    % Search for registration Y
+    %% Search for registration Y
     subexpression = xpath.compile(['fullCorrelationDataArray/', ...
         'fullCorrelationDataArray/correlation/displacement/y']);
     
@@ -574,7 +574,7 @@ for i = 1:nodeList.getLength
     scans{plan}.registration(k, 5) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
-    % Search for registration Z
+    %% Search for registration Z
     subexpression = xpath.compile(['fullCorrelationDataArray/', ...
         'fullCorrelationDataArray/correlation/displacement/z']);
     
@@ -590,7 +590,7 @@ for i = 1:nodeList.getLength
     scans{plan}.registration(k, 6) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
-    % Search for registration pitch
+    %% Search for registration pitch
     subexpression = xpath.compile(['fullCorrelationDataArray/', ...
         'fullCorrelationDataArray/correlation/rotation/x']);
     
@@ -606,7 +606,7 @@ for i = 1:nodeList.getLength
     scans{plan}.registration(k, 1) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
-    % Search for registration yaw
+    %% Search for registration yaw
     subexpression = xpath.compile(['fullCorrelationDataArray/', ...
         'fullCorrelationDataArray/correlation/rotation/y']);
     
@@ -622,7 +622,7 @@ for i = 1:nodeList.getLength
     scans{plan}.registration(k, 2) = ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
-    % Search for registration roll
+    %% Search for registration roll
     subexpression = xpath.compile(['fullCorrelationDataArray/', ...
         'fullCorrelationDataArray/correlation/rotation/z']);
     
