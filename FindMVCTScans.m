@@ -76,7 +76,7 @@ for i = 1:nodeList.getLength
     % Retrieve a handle to this delivery plan
     node = nodeList.item(i-1);
 
-    % Search for approved plan trial UID
+    %% Search for approved plan trial UID
     subexpression = xpath.compile('approvedPlanTrialUID');
 
     % Evaluate xpath expression and retrieve the results
@@ -95,7 +95,7 @@ for i = 1:nodeList.getLength
         continue
     end
     
-    % Search for plan type
+    %% Search for plan type
     subexpression = xpath.compile('typeOfPlan');
 
     % Evaluate xpath expression and retrieve the results
@@ -114,7 +114,7 @@ for i = 1:nodeList.getLength
         continue
     end
     
-    % Search for plan database UID
+    %% Search for plan database UID
     subexpression = xpath.compile('dbInfo/databaseUID');
 
     % Evaluate xpath expression and retrieve the results
@@ -131,7 +131,7 @@ for i = 1:nodeList.getLength
     % Store the plan UID
     scans{i}.planUID = char(subnode.getFirstChild.getNodeValue);
     
-    % Search for plan label
+    %% Search for plan label
     subexpression = xpath.compile('planLabel');
 
     % Evaluate xpath expression and retrieve the results
@@ -162,14 +162,230 @@ if exist('Event', 'file') == 2
     Event(sprintf('%i plan(s) found', length(scans)));
 end
 
-% Log start of matching and start timer
+%% Declare a new xpath search expression for all fullImageDataArrays
+expression = xpath.compile(['//fullImageDataArray/', ...
+    'fullImageDataArray']);
+
+% Retrieve the results
+nodeList = expression.evaluate(doc, XPathConstants.NODESET);
+
+% Loop through the fullImageDataArrays
+for i = 1:nodeList.getLength
+
+    % Retrieve a handle to this procedure
+    node = nodeList.item(i-1);
+
+    %% Search for imageType
+    subexpression = ...
+        xpath.compile('image/imageType');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no approved plan trial UID was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+    
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+
+    % If image type is not KVCT, continue
+    if ~strcmp(char(subnode.getFirstChild.getNodeValue), 'KVCT')
+        continue
+    end
+    
+    %% Search for database parent UID
+    subexpression = ...
+        xpath.compile('image/dbInfo/databaseParent');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no approved plan trial UID was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+    
+    % Retrieve a handle to the results
+    subnode = subnodeList.item(0);
+
+    % Store parent UID
+    parent = char(subnode.getFirstChild.getNodeValue);
+    
+    % Initialize plan flag
+    plan = 0;
+    
+    % Loop through each patient scan
+    for j = 1:length(scans)
+        
+        % If the parent UID matches a plan
+        if strcmp(parent, scans{j}.planUID)
+            
+            % Set plan to index
+            plan = j;
+            
+            % Break for loop
+            break;
+        end
+    end
+    
+    % If this procedure did not match a plan, continue to next procedure
+    if plan == 0; continue; end
+    
+    %% Search for reference image X dimension
+    subexpression = ...
+        xpath.compile('image/arrayHeader/dimensions/x');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no value was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+
+    % Store dimension
+    scans{plan}.referenceDim(1) = ...
+        str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+    
+    %% Search for reference image Y dimension
+    subexpression = ...
+        xpath.compile('image/arrayHeader/dimensions/y');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no value was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+
+    % Store dimension
+    scans{plan}.referenceDim(2) = ...
+        str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+   
+    %% Search for reference image Z dimension
+    subexpression = ...
+        xpath.compile('image/arrayHeader/dimensions/z');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no value was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+
+    % Store dimension
+    scans{plan}.referenceDim(3) = ...
+        str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+    
+    %% Search for reference image X start
+    subexpression = ...
+        xpath.compile('image/arrayHeader/start/x');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no value was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+
+    % Store dimension
+    scans{plan}.referenceStart(1) = ...
+        str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+    
+    %% Search for reference image Y start
+    subexpression = ...
+        xpath.compile('image/arrayHeader/start/y');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no value was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+
+    % Store dimension
+    scans{plan}.referenceStart(2) = ...
+        str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+    
+    %% Search for reference image Z start
+    subexpression = ...
+        xpath.compile('image/arrayHeader/start/z');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no value was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+
+    % Store dimension
+    scans{plan}.referenceStart(3) = ...
+        str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+    
+    %% Search for reference image X width
+    subexpression = ...
+        xpath.compile('image/arrayHeader/elementSize/x');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no value was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+
+    % Store dimension
+    scans{plan}.referenceSize(1) = ...
+        str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+    
+    %% Search for reference image Y width
+    subexpression = ...
+        xpath.compile('image/arrayHeader/elementSize/y');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no value was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+
+    % Store dimension
+    scans{plan}.referenceSize(2) = ...
+        str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+    
+    %% Search for reference image Z width
+    subexpression = ...
+        xpath.compile('image/arrayHeader/elementSize/z');
+
+    % Evaluate xpath expression and retrieve the results
+    subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+    % If no value was found, continue to next result
+    if subnodeList.getLength == 0
+        continue
+    end
+
+    % Store dimension
+    scans{plan}.referenceSize(3) = ...
+        str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+end
+
+%% Declare a new xpath search expression for all fullProcedureDataArrays
+expression = xpath.compile(['//fullProcedureDataArray/', ...
+    'fullProcedureDataArray']);
+
+% Log start of matching
 if exist('Event', 'file') == 2
     Event(sprintf('Searching %s for MVCT procedures', name));
 end
-
-% Declare a new xpath search expression for all fullProcedureDataArrays
-expression = xpath.compile(['//fullProcedureDataArray/', ...
-    'fullProcedureDataArray']);
 
 % Retrieve the results
 nodeList = expression.evaluate(doc, XPathConstants.NODESET);
@@ -571,8 +787,8 @@ for i = 1:nodeList.getLength
     end
     
     % Store the registration
-    scans{plan}.registration(k, 5) = ...
-        str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+    scans{plan}.registration(k, 6) = ...
+        -str2double(subnodeList.item(0).getFirstChild.getNodeValue);
     
     %% Search for registration Z
     subexpression = xpath.compile(['fullCorrelationDataArray/', ...
@@ -586,10 +802,13 @@ for i = 1:nodeList.getLength
         continue
     end
     
-    % Store the registration
-    scans{plan}.registration(k, 6) = ...
+    % Store the registration, correcting for image center offset
+    scans{plan}.registration(k, 5) = -scans{plan}.referenceStart(3) - ...
+        (scans{plan}.referenceSize(3) * (scans{plan}.referenceDim(3) - 1))/2 ...
+        + (scans{plan}.imageStart(k, 3) + (scans{plan}.imageSize(k, 3) * ...
+        (scans{plan}.imageDim(k, 3) - 1))/2) - ...
         str2double(subnodeList.item(0).getFirstChild.getNodeValue);
-    
+
     %% Search for registration pitch
     subexpression = xpath.compile(['fullCorrelationDataArray/', ...
         'fullCorrelationDataArray/correlation/rotation/x']);

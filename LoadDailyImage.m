@@ -166,7 +166,7 @@ case 'ARCHIVE'
         % Retrieve a handle to this procedure
         node = nodeList.item(i-1);
 
-        % Search for procedure database UID
+        %% Search for procedure database UID
         subexpression = ...
             xpath.compile('procedure/briefProcedure/dbInfo/databaseUID');
 
@@ -186,7 +186,7 @@ case 'ARCHIVE'
             continue;
         end
         
-        % Search for procedure database UID
+        %% Search for procedure database parent UID
         subexpression = ...
             xpath.compile('procedure/briefProcedure/dbInfo/databaseParent');
 
@@ -204,7 +204,7 @@ case 'ARCHIVE'
         % Verify procedure UID matches provided, otherwise continue
         image.planUID = char(subnode.getFirstChild.getNodeValue);
 
-        % Search for scheduledStartDateTime date
+        %% Search for scheduledStartDateTime date
         subexpression = xpath.compile(['procedure/briefProcedure/', ...
             'scheduledStartDateTime/date']);
 
@@ -221,7 +221,7 @@ case 'ARCHIVE'
             d = char(subnode.getFirstChild.getNodeValue);
         end
 
-        % Search for scheduledStartDateTime time
+        %% Search for scheduledStartDateTime time
         subexpression = xpath.compile(['procedure/briefProcedure/', ...
             'scheduledStartDateTime/time']);
 
@@ -241,7 +241,7 @@ case 'ARCHIVE'
         % Store the date and time as a timestamp
         image.timestamp = datenum([d,'-',t], 'yyyymmdd-HHMMSS');
 
-        % Search for machine calibration UID
+        %% Search for machine calibration UID
         subexpression = ...
             xpath.compile('procedure/scheduledProcedure/machineCalibration');
 
@@ -255,7 +255,7 @@ case 'ARCHIVE'
         image.machineCalibration = ...
             char(subnode.getFirstChild.getNodeValue);
 
-        % Search for scanList
+        %% Search for scanList
         subexpression = xpath.compile(['procedure/scheduledProcedure/', ...
             'mvctData/scanList/scanList']);
 
@@ -287,7 +287,7 @@ case 'ARCHIVE'
             end
         end
 
-        % Search for scanListZValues
+        %% Search for scanListZValues
         subexpression = xpath.compile(['procedure/scheduledProcedure/', ...
             'mvctData/scanListZValues/scanListZValues']);
 
@@ -305,7 +305,7 @@ case 'ARCHIVE'
         image.scanLength(2) = ...
             str2double(subnodeList.item(stop).getFirstChild.getNodeValue);
 
-        % Search for image data
+        %% Search for image data
         subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
             'image/arrayHeader/binaryFileName']);
 
@@ -324,7 +324,7 @@ case 'ARCHIVE'
         image.filename = fullfile(varargin{1}, ...
             char(subnode.getFirstChild.getNodeValue));
 
-        % Search for image X dimension
+        %% Search for image X dimension
         subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
             'image/arrayHeader/dimensions/x']);
 
@@ -340,7 +340,7 @@ case 'ARCHIVE'
         image.dimensions(1) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
-        % Search for image Y dimension
+        %% Search for image Y dimension
         subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
             'image/arrayHeader/dimensions/y']);
 
@@ -356,7 +356,7 @@ case 'ARCHIVE'
         image.dimensions(2) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
-        % Search for image Z dimension
+        %% Search for image Z dimension
         subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
             'image/arrayHeader/dimensions/z']);
 
@@ -372,7 +372,7 @@ case 'ARCHIVE'
         image.dimensions(3) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
-        % Search for image X start
+        %% Search for image X start
         subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
             'image/arrayHeader/start/x']);
 
@@ -388,7 +388,7 @@ case 'ARCHIVE'
         image.start(1) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
-        % Search for image Y start
+        %% Search for image Y start
         subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
             'image/arrayHeader/start/y']);
 
@@ -404,7 +404,7 @@ case 'ARCHIVE'
         image.start(2) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
-        % Search for image Z start
+        %% Search for image Z start
         subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
             'image/arrayHeader/start/z']);
 
@@ -420,7 +420,7 @@ case 'ARCHIVE'
         image.start(3) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
-        % Search for image X size
+        %% Search for image X size
         subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
             'image/arrayHeader/elementSize/x']);
 
@@ -436,7 +436,7 @@ case 'ARCHIVE'
         image.width(1) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
-        % Search for image Y size
+        %% Search for image Y size
         subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
             'image/arrayHeader/elementSize/y']);
 
@@ -452,7 +452,7 @@ case 'ARCHIVE'
         image.width(2) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
-        % Search for image Z size
+        %% Search for image Z size
         subexpression = xpath.compile(['fullImageDataArray/fullImageDataArray/', ...
             'image/arrayHeader/elementSize/z']);
 
@@ -468,7 +468,7 @@ case 'ARCHIVE'
         image.width(3) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
-        % Search for registration X
+        %% Search for registration X
         subexpression = xpath.compile(['fullCorrelationDataArray/', ...
             'fullCorrelationDataArray/correlation/displacement/x']);
 
@@ -484,7 +484,7 @@ case 'ARCHIVE'
         image.registration(4) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
-        % Search for registration Y
+        %% Search for registration Y
         subexpression = xpath.compile(['fullCorrelationDataArray/', ...
             'fullCorrelationDataArray/correlation/displacement/y']);
 
@@ -497,10 +497,10 @@ case 'ARCHIVE'
         end
 
         % Store the registration
-        image.registration(5) = ...
-            str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+        image.registration(6) = ...
+            -str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
-        % Search for registration Z
+        %% Search for registration Z
         subexpression = xpath.compile(['fullCorrelationDataArray/', ...
             'fullCorrelationDataArray/correlation/displacement/z']);
 
@@ -513,10 +513,10 @@ case 'ARCHIVE'
         end
 
         % Store the registration
-        image.registration(6) = ...
-            str2double(subnodeList.item(0).getFirstChild.getNodeValue);
-
-        % Search for registration pitch
+        image.registration(5) = ...
+            -str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+        
+        %% Search for registration pitch
         subexpression = xpath.compile(['fullCorrelationDataArray/', ...
             'fullCorrelationDataArray/correlation/rotation/x']);
 
@@ -532,7 +532,7 @@ case 'ARCHIVE'
         image.registration(1) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
-        % Search for registration yaw
+        %% Search for registration yaw
         subexpression = xpath.compile(['fullCorrelationDataArray/', ...
             'fullCorrelationDataArray/correlation/rotation/y']);
 
@@ -548,7 +548,7 @@ case 'ARCHIVE'
         image.registration(2) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
-        % Search for registration roll
+        %% Search for registration roll
         subexpression = xpath.compile(['fullCorrelationDataArray/', ...
             'fullCorrelationDataArray/correlation/rotation/z']);
 
@@ -564,6 +564,21 @@ case 'ARCHIVE'
         image.registration(3) = ...
             str2double(subnodeList.item(0).getFirstChild.getNodeValue);
 
+        %% Search for correlation image UID
+        subexpression = xpath.compile(['fullCorrelationDataArray/', ...
+            'fullCorrelationDataArray/correlation/object1']);
+        
+        % Evaluate xpath expression and retrieve the results
+        subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+        % If no values were found, continue to next result
+        if subnodeList.getLength == 0
+            continue
+        end
+        
+        % Store the correlated image UID
+        image.referenceUID = char(subnodeList.item(0).getFirstChild.getNodeValue);
+        
         % Break the loop, as the MVCT was found
         break;
     end
@@ -579,6 +594,104 @@ case 'ARCHIVE'
             error('An associated plan UID was not found for scan UID %s', ...
                 planUID);
         end
+    end
+    
+    %% Load reference image info
+    % Declare a new xpath search expression.  Search for all images
+    expression = ...
+        xpath.compile('//fullImageDataArray/fullImageDataArray');
+
+    % Evaluate xpath expression and retrieve the results
+    nodeList = expression.evaluate(doc, XPathConstants.NODESET);
+
+    % Loop through the results
+    for i = 1:nodeList.getLength
+        
+        % Set a handle to the current result
+        node = nodeList.item(i-1);
+
+        %% Verify reference UID
+        % Search for procedure XML object databaseUID
+        subexpression = xpath.compile('image/dbInfo/databaseUID');
+        
+        % Evaluate xpath expression and retrieve the results
+        subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+        % If a UID was found
+        if subnodeList.getLength > 0 && isfield(image, 'referenceUID')
+
+            % Store the first returned value
+            subnode = subnodeList.item(0);
+        else
+
+            % Otherwise, continue to next result
+            continue
+        end
+
+        % If the plan data array does not match the image UID, continue to
+        % next result
+        if ~strcmp(char(subnode.getFirstChild.getNodeValue), ...
+                image.referenceUID)
+            continue
+        end  
+        
+        %% Load image dimension
+        % Search for image XML object z dimension
+        subexpression = xpath.compile('image/arrayHeader/dimensions/z');
+
+        % Evaluate xpath expression and retrieve the results
+        subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+        % If no values were found, continue to next result
+        if subnodeList.getLength == 0
+            continue
+        end
+        
+        % Store the z dimensions
+        dimz = str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+        
+        %% Load image start
+        % Search for image XML object z dimension
+        subexpression = xpath.compile('image/arrayHeader/start/z');
+
+        % Evaluate xpath expression and retrieve the results
+        subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+        % If no values were found, continue to next result
+        if subnodeList.getLength == 0
+            continue
+        end
+        
+        % Store the z dimensions
+        startz = str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+        
+        %% Load image width
+        % Search for image XML object z dimension
+        subexpression = xpath.compile('image/arrayHeader/elementSize/z');
+
+        % Evaluate xpath expression and retrieve the results
+        subnodeList = subexpression.evaluate(node, XPathConstants.NODESET);
+
+        % If no values were found, continue to next result
+        if subnodeList.getLength == 0
+            continue
+        end
+        
+        % Store the z dimensions
+        widthz = str2double(subnodeList.item(0).getFirstChild.getNodeValue);
+        
+        % Compute registration Z offset
+        o = image.start(3) + (image.width(3) * (image.dimensions(3) - 1))/2 ...
+            - (startz + (widthz * (dimz - 1))/2);
+        
+        % Log registration correction
+        if exist('Event', 'file') == 2
+            Event(sprintf(['Adjusting registration IEC Y correction by ', ...
+                'offset = %0.2f'], o));
+        end
+        
+        % Adjust registration IEC Y
+        image.registration(5) = image.registration(5) + o;
     end
     
     %% Load plan info
